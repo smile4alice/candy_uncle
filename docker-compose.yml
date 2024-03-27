@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+
+  postgres: &pg_base
+    image: postgres:16.2
+    container_name: postgres_uncle
+    ports:
+      - $POSTGRES_PORT:5432
+    env_file:
+      - .env
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - uncle
+    healthcheck:
+      test: "pg_isready -d $POSTGRES_DB -U $POSTGRES_USER"
+      interval: 2s
+      timeout: 15s
+
+  postgres_tests:
+    <<: *pg_base
+    container_name: postgres_tests_uncle
+    ports:
+      - 6999:5432
+    environment:
+      - POSTGRES_DB=test_db
+      - POSTGRES_USER=test_u
+      - POSTGRES_PASSWORD=test_p
+    volumes:
+      - postgres_tests_data:/var/lib/postgresql/data
+
+networks:
+  uncle:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  postgres_tests_data:

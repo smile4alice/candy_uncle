@@ -7,7 +7,7 @@ from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_applicati
 from aiohttp import web
 
 from src import BOT, settings
-from src.routers import ROUTERS
+from src.handlers import ROUTERS
 
 
 async def on_startup(bot: Bot) -> None:
