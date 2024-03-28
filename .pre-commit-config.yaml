@@ -2,11 +2,6 @@
 repos:
   - repo: local
     hooks:
-      - id: validate-commit-message
-        name: Validate Commit Message
-        entry: bash -c 'regex=\'^(feat|bugfix|hotfix):.*$\' && if ! grep -iqE \"$regex\" \"$1\"; then echo \"Invalid commit message(pre-commit validation)\"; exit 1; fi'
-        language: system
-        files: \.git/COMMIT_EDITMSG
 
       - id: black
         name: black

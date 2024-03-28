@@ -1,7 +1,7 @@
 """add base_commands model
 
 Revision ID: 0aa71f68df59
-Revises: 
+Revises:
 Create Date: 2024-03-28 16:33:21.568007
 
 """
