@@ -8,7 +8,7 @@ from aiogram.webhook.aiohttp_server import (
     setup_application,
 )
 from aiohttp import web
-from src import BOT, settings
+from src import settings
 from src.handlers import ROUTERS
 
 
@@ -58,14 +58,15 @@ async def start_web_app(dp: Dispatcher, bot: Bot):
 async def main():
     print("Bot is started")
 
+    bot = Bot(token=settings.BOT_TOKEN)
     dp = Dispatcher()
 
     dp.include_routers(*ROUTERS)
 
     if settings.IS_PROD:
-        await start_web_app(dp, BOT)
+        await start_web_app(dp, bot)
     else:
-        await dp.start_polling(BOT)
+        await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
