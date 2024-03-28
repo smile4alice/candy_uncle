@@ -1,18 +1,19 @@
-"""add CommandModel
+"""add base_commands model
 
-Revision ID: 0c7e093c1667
+Revision ID: 0aa71f68df59
 Revises: 
-Create Date: 2024-03-27 19:41:48.843504
+Create Date: 2024-03-28 16:33:21.568007
 
 """
+
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision: str = "0c7e093c1667"
+revision: str = "0aa71f68df59"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

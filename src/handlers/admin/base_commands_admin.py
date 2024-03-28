@@ -1,10 +1,10 @@
 from aiogram import Router
-from aiogram.types import Message
 from aiogram.filters import Command
-
+from aiogram.types import Message
 from src.exceptions import InvalidCommandError
 from src.lib import SERVER_ERROR
 from src.services.base_commands_service import update_or_add_record_by_name
+
 
 admin_base_commands_router = Router()
 

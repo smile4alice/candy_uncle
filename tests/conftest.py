@@ -5,10 +5,10 @@ from time import sleep
 import pytest
 from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import create_async_engine
-
 from src.database import Base, async_session_maker
 
-DATABASE_URL_TEST = f"postgresql+asyncpg://test_u:test_p@localhost:6999/test_db"
+
+DATABASE_URL_TEST = "postgresql+asyncpg://test_u:test_p@localhost:6999/test_db"
 DB_CONTAINER = "postgres_tests_uncle"
 DB_VOLUME = f"{os.path.basename(os.getcwd())}_postgres_tests_data"
 
@@ -18,7 +18,13 @@ async def create_database():
     while True:
         sleep(1)
         res = sp_run(
-            ["docker", "inspect", "-f", "{{json .State.Health.Status}}", DB_CONTAINER],
+            [
+                "docker",
+                "inspect",
+                "-f",
+                "{{json .State.Health.Status}}",
+                DB_CONTAINER,
+            ],
             capture_output=True,
             text=True,
         )
