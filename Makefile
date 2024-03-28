@@ -1,4 +1,4 @@
-.PHONY: down dev tests drop_db
+.PHONY: init down dev tests drop_db
 
 START_COMMAND := python main.py
 DB_CONTAINER := postgres_uncle
@@ -16,6 +16,10 @@ define docker_start_lock
 		fi; \
 	done
 endef
+
+init:
+	pip install -r requirements.txt
+	pre-commit install
 
 down:
 	docker compose down
