@@ -1,10 +1,11 @@
 from sqlalchemy import select
+
 from src.database import async_session_maker
 from src.exceptions import RecordsNotFound
 from src.models.base_command_model import BaseCommandModel
 
 
-async def get_text_by_command_name(name: str) -> BaseCommandModel | None:
+async def get_text_by_command_name(name: str) -> str:
     """
     Retrieve instance with command data by command name.
 
@@ -31,7 +32,7 @@ async def get_text_by_command_name(name: str) -> BaseCommandModel | None:
         return str(e)
     except Exception as e:
         # TODO logger
-        return e
+        raise e
 
 
 async def update_or_add_record_by_name(name: str, text: str) -> bool:

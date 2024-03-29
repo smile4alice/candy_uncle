@@ -8,6 +8,7 @@ from aiogram.webhook.aiohttp_server import (
     setup_application,
 )
 from aiohttp import web
+
 from src import settings
 from src.handlers import ROUTERS
 
@@ -42,9 +43,7 @@ async def start_web_app(dp: Dispatcher, bot: Bot):
 
     # Generate SSL context
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-    context.load_cert_chain(
-        settings.webhook_ssl_cert, settings.webhook_ssl_priv
-    )
+    context.load_cert_chain(settings.webhook_ssl_cert, settings.webhook_ssl_priv)
 
     # And finally start webserver
     web.run_app(

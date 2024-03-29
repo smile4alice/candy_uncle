@@ -1,4 +1,4 @@
-.PHONY: init down dev tests drop_db
+.PHONY: init down dev pre_commit tests drop_db
 
 START_COMMAND := python main.py
 DB_CONTAINER := postgres_uncle
@@ -29,6 +29,9 @@ dev: down
 	$(call docker_start_lock,$(DB_CONTAINER))
 	alembic upgrade head
 	$(START_COMMAND)
+
+pre_commit:
+	sh pre_commit/pre_commit.sh
 
 tests:
 	docker compose up postgres_tests -d
