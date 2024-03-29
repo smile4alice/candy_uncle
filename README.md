@@ -1,5 +1,7 @@
 <p align="center">
-  <a href="https://fastapi.tiangolo.com"><img src="https://th.bing.com/th/id/OIG4.dbY3kumcxp.kAMN4P_kz?w=1024&h=1024&rs=1&pid=ImgDetMain" alt="FastAPI"></a>
+  <a href="https://t.me/candy_uncle_bot">
+    <img src="https://th.bing.com/th/id/OIG4.dbY3kumcxp.kAMN4P_kz?w=1024&h=1024&rs=1&pid=ImgDetMain" height="255px" alt="Candy Uncle">
+  </a>
 </p>
 <p align="center">
     <em>Candy Uncle is a Telegram BOT as a PET project using the best practices of python application development that I have learned.</em>

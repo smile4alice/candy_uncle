@@ -6,6 +6,8 @@ scenarios within an application.These exceptions provide  allowing for more
 expressive error handling and better organization of code.
 """
 
+from typing import Optional
+
 
 class RecordsNotFound(Exception):
     """Exception raised when no records were found in the database."""
@@ -27,7 +29,7 @@ class InvalidCommandError(Exception):
     def __init__(
         self,
         message: str = "Incorrect bot command entered.",
-        example: str = None,
+        example: Optional[str] = None,
     ):
         """
         Initialize the exception.

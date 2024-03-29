@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import create_async_engine
+
 from src.database import Base, async_session_maker
 
 
