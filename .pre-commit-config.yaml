@@ -25,4 +25,4 @@ repos:
         name: mypy
         entry: mypy --config-file pre_commit/mypy.cfg .
         language: system
-        types: [ python, pyi]
+        types: [ python ]
