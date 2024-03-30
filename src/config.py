@@ -37,10 +37,11 @@ class Settings(BaseSettings):
     These settings can be accessed using an instance.
     """
 
-    BOT_TOKEN: str
     IS_PROD: bool
-    BASE_URL: str
+    BOT_TOKEN: str
+    SUPERUSER_ID: int
 
+    BASE_URL: str
     WEBHOOK_PATH: str
     WEBHOOK_SECRET: str
     WEB_SERVER_HOST: str = "0.0.0.0"
@@ -56,5 +57,5 @@ class Settings(BaseSettings):
     )
 
 
-settings = Settings()
+SETTINGS = Settings()
 """Singleton instance for managing application settings."""

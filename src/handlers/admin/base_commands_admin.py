@@ -4,6 +4,7 @@ from aiogram.types import Message
 
 from src.exceptions import InvalidCommandError
 from src.lib import SERVER_ERROR
+from src.logging import LOGGER
 from src.services.base_commands_service import update_or_add_record_by_name
 
 
@@ -29,5 +30,4 @@ async def process_update_command(message: Message):
     except InvalidCommandError as e:
         await message.reply(str(e))
     except Exception as e:
-        # TODO logger
-        raise e
+        LOGGER.exception(e)
