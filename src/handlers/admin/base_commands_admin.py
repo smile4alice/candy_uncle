@@ -1,7 +1,6 @@
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
-
 from src.exceptions import InvalidCommandError
 from src.lib import SERVER_ERROR
 from src.logging import LOGGER

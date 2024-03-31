@@ -16,7 +16,6 @@ from typing import Coroutine
 
 from aiogram import Bot
 from aiogram.enums.parse_mode import ParseMode
-
 from src.config import SETTINGS
 
 

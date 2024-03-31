@@ -5,24 +5,24 @@ repos:
 
       - id: black
         name: black
-        entry: black --config pre_commit/black.cfg .
+        entry: black --config=pre_commit/black.cfg .
         language: system
         types: [ python ]
 
       - id: isort
         name: isort
-        entry: isort --settings pre_commit/isort.cfg .
+        entry: isort  --settings=pre_commit/isort.cfg .
         language: system
         types: [ python ]
 
       - id: flake8
         name: flake8
-        entry: flake8 --config pre_commit/flake8.cfg .
+        entry: flake8 --config=pre_commit/flake8.cfg .
         language: system
         types: [ python ]
 
       - id: mypy
         name: mypy
-        entry: mypy --config-file pre_commit/mypy.cfg .
+        entry: mypy --config-file=pre_commit/mypy.cfg
         language: system
-        types: [ python, pyi ]
+        types: [ python ]

@@ -8,7 +8,6 @@ from aiogram.webhook.aiohttp_server import (
     setup_application,
 )
 from aiohttp import web
-
 from src.config import SETTINGS
 from src.handlers import ROUTERS
 from src.logging import LOGGER

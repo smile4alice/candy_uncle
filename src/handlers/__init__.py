@@ -1,5 +1,5 @@
-from .admin.base_commands_admin import admin_base_commands_router
-from .base_commands import base_commands_router
+from src.handlers.admin.base_commands_admin import admin_base_commands_router
+from src.handlers.base_commands import base_commands_router
 
 
 ROUTERS = (
