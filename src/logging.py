@@ -98,7 +98,7 @@ def init_logger() -> logging.Logger:
     logs_format = (
         "%(levelname)-8s | %(asctime)-20s| %(filename)s:%(lineno)s | %(message)s"
     )
-    logs_date_format = "%H:%M:%S %d-%m-%Y"
+    logs_date_format = " %Y-%m-%d %H:%M:%S"
     formatter = logging.Formatter(logs_format, logs_date_format)
 
     console_hanlder = logging.StreamHandler()

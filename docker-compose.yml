@@ -31,6 +31,23 @@ services:
     volumes:
       - postgres_tests_data:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7.2.4
+    container_name: redis_uncle
+    ports:
+      - $REDIS_PORT:$REDIS_PORT
+    environment:
+      - REDIS_PASSWORD=$REDIS_PASSWORD
+    restart: always
+    volumes:
+      - redis_data:/data
+    networks:
+      - uncle
+    healthcheck:
+      test: "redis-cli --raw ping"
+      interval: 2s
+      timeout: 15s
+
 networks:
   uncle:
     driver: bridge
@@ -38,3 +55,4 @@ networks:
 volumes:
   postgres_data:
   postgres_tests_data:
+  redis_data:

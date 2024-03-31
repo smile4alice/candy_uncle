@@ -25,7 +25,7 @@ down:
 	docker compose down
 
 dev: down
-	docker compose up postgres -d
+	docker compose up postgres redis -d
 	$(call docker_start_lock,$(DB_CONTAINER))
 	alembic upgrade head
 	$(START_COMMAND)
