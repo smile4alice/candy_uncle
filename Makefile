@@ -1,4 +1,4 @@
-.PHONY: init down dev pre_commit tests drop_db
+.PHONY: init down dev pre_commit export_secret tests drop_db
 
 START_COMMAND := python main.py
 DB_CONTAINER := postgres_uncle
@@ -37,6 +37,9 @@ dev: down
 
 pre_commit:
 	sh scripts/pre_commit.sh
+
+export_secret:
+	base64 -w 0 .env > secret.base64
 
 tests:
 	docker compose up postgres_tests -d
