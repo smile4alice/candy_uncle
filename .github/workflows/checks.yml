@@ -40,7 +40,6 @@ jobs:
         env:
           ENV_FOR_TESTS: ${{ secrets.ENV_FOR_TESTS }}
         run: |
-          echo $ENV_FOR_TESTS | base64 --decode > .env
-          cat .env
+          echo $ENV_FOR_TESTS | base64 --decode > $GITHUB_ENV
       - name: Run tests
         run: pytest
