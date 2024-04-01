@@ -48,6 +48,27 @@ services:
       interval: 2s
       timeout: 15s
 
+  backend:
+    image: backend_image_uncle
+    build:
+      context: .
+    container_name: backend_uncle
+    env_file:
+      - .env
+    entrypoint: sh "scripts/backend.sh"
+    ports:
+      - $WEB_SERVER_PORT:$WEB_SERVER_PORT
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: always
+    volumes:
+      - backend_data:/backend_app/media
+    networks:
+      - uncle
+
 networks:
   uncle:
     driver: bridge
@@ -56,3 +77,4 @@ volumes:
   postgres_data:
   postgres_tests_data:
   redis_data:
+  backend_data:

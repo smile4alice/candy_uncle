@@ -21,8 +21,13 @@ init:
 	pip install -r requirements.txt
 	pre-commit install
 
+prod: down build
+
 down:
 	docker compose down
+
+build:
+	docker compose up -d --build --scale postgres_tests=0
 
 dev: down
 	docker compose up postgres redis -d
@@ -31,7 +36,7 @@ dev: down
 	$(START_COMMAND)
 
 pre_commit:
-	sh pre_commit/pre_commit.sh
+	sh scripts/pre_commit.sh
 
 tests:
 	docker compose up postgres_tests -d
