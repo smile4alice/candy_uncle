@@ -36,7 +36,9 @@ jobs:
         run: |
           pip install -U pip
           pip install -r requirements.txt
-          ENV_FOR_TESTS='$secrets.ENV_FOR_TESTS'
+      - name: Export variables from secret
+        run: |
+          ENV_JSON='${{ secrets.ENV_FOR_TESTS }}'
           echo "$ENV_FOR_TESTS" | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
       - name: Run tests
         run: pytest
