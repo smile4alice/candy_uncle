@@ -39,4 +39,5 @@ jobs:
       - name: Run tests
         env:
           IS_PROD: ${{ vars.IS_PROD }}
+          POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
         run: pytest
