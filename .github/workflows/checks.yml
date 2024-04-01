@@ -40,5 +40,10 @@ jobs:
         run: |
           ENV_JSON='${{ secrets.ENV_FOR_TESTS }}'
           echo "$ENV_FOR_TESTS" | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
+          - name: Do Something with env files
+          env:
+            ENV_FOR_TESTS: ${{ secrets.ENV_FOR_TESTS }}
+          run: |
+            echo $ENV_FOR_TESTS | base64 --decode > .env
       - name: Run tests
         run: pytest
