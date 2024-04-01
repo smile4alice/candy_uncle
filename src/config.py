@@ -37,14 +37,19 @@ class Settings(BaseSettings):
     These settings can be accessed using an instance.
     """
 
-    BOT_TOKEN: str
     IS_PROD: bool
-    BASE_URL: str
+    BOT_TOKEN: str
+    SUPERUSER_ID: int
 
+    BASE_URL: str
     WEBHOOK_PATH: str
     WEBHOOK_SECRET: str
     WEB_SERVER_HOST: str = "0.0.0.0"
     WEB_SERVER_PORT: int = 5000
+
+    REDIS_PASSWORD: str
+    REDIS_HOST: str
+    REDIS_PORT: int
 
     # only for self-signed
     webhook_ssl_cert: str = os.path.join("static", "certs", "cert.pem")
@@ -56,5 +61,5 @@ class Settings(BaseSettings):
     )
 
 
-settings = Settings()
+SETTINGS = Settings()
 """Singleton instance for managing application settings."""

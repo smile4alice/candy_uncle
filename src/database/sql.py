@@ -4,13 +4,12 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.orm import declarative_base
-
-from src import settings
+from src.config import SETTINGS
 
 
 Base = declarative_base()
 
-engine = create_async_engine(url=settings.sql_dsn)
+engine = create_async_engine(url=SETTINGS.sql_dsn)
 async_session_maker = async_sessionmaker(
     engine, class_=AsyncSession, expire_on_commit=False
 )

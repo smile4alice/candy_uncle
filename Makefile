@@ -1,4 +1,4 @@
-.PHONY: init down dev pre_commit tests drop_db
+.PHONY: init down dev pre_commit export_secret tests drop_db
 
 START_COMMAND := python main.py
 DB_CONTAINER := postgres_uncle
@@ -21,17 +21,25 @@ init:
 	pip install -r requirements.txt
 	pre-commit install
 
+prod: down build
+
 down:
 	docker compose down
 
+build:
+	docker compose up -d --build --scale postgres_tests=0
+
 dev: down
-	docker compose up postgres -d
+	docker compose up postgres redis -d
 	$(call docker_start_lock,$(DB_CONTAINER))
 	alembic upgrade head
 	$(START_COMMAND)
 
 pre_commit:
-	sh pre_commit/pre_commit.sh
+	sh scripts/pre_commit.sh
+
+export_secret:
+	base64 -w 0 .env > secret.base64
 
 tests:
 	docker compose up postgres_tests -d

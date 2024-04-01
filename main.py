@@ -8,9 +8,9 @@ from aiogram.webhook.aiohttp_server import (
     setup_application,
 )
 from aiohttp import web
-
-from src import settings
+from src.config import SETTINGS
 from src.handlers import ROUTERS
+from src.logging import LOGGER
 
 
 async def on_startup(bot: Bot) -> None:
@@ -20,9 +20,9 @@ async def on_startup(bot: Bot) -> None:
     certificate, you SHOULD NOT send it to Telegram servers.
     """
     await bot.set_webhook(
-        f"{settings.BASE_URL}{settings.WEBHOOK_PATH}",
-        certificate=FSInputFile(settings.webhook_ssl_cert),
-        secret_token=settings.WEBHOOK_SECRET,
+        f"{SETTINGS.BASE_URL}{SETTINGS.WEBHOOK_PATH}",
+        certificate=FSInputFile(SETTINGS.webhook_ssl_cert),
+        secret_token=SETTINGS.WEBHOOK_SECRET,
     )
 
 
@@ -32,37 +32,37 @@ async def start_web_app(dp: Dispatcher, bot: Bot):
 
     app = web.Application()
     webhook_requests_handler = SimpleRequestHandler(
-        dispatcher=dp, bot=bot, secret_token=settings.WEBHOOK_SECRET
+        dispatcher=dp, bot=bot, secret_token=SETTINGS.WEBHOOK_SECRET
     )
 
     # Register webhook handler on application
-    webhook_requests_handler.register(app, path=settings.WEBHOOK_PATH)
+    webhook_requests_handler.register(app, path=SETTINGS.WEBHOOK_PATH)
 
     # Mount dispatcher startup and shutdown hooks to aiohttp application
     setup_application(app, dp, bot=bot)
 
     # Generate SSL context
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-    context.load_cert_chain(settings.webhook_ssl_cert, settings.webhook_ssl_priv)
+    context.load_cert_chain(SETTINGS.webhook_ssl_cert, SETTINGS.webhook_ssl_priv)
 
     # And finally start webserver
     web.run_app(
         app,
-        host=settings.WEB_SERVER_HOST,
-        port=settings.WEB_SERVER_PORT,
+        host=SETTINGS.WEB_SERVER_HOST,
+        port=SETTINGS.WEB_SERVER_PORT,
         ssl_context=context,
     )
 
 
 async def main():
-    print("Bot is started")
+    LOGGER.info("Bot is started")
 
-    bot = Bot(token=settings.BOT_TOKEN)
+    bot = Bot(token=SETTINGS.BOT_TOKEN)
     dp = Dispatcher()
 
     dp.include_routers(*ROUTERS)
 
-    if settings.IS_PROD:
+    if SETTINGS.IS_PROD:
         await start_web_app(dp, bot)
     else:
         await dp.start_polling(bot)

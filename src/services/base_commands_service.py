@@ -1,7 +1,8 @@
 from sqlalchemy import select
-
 from src.database import async_session_maker
 from src.exceptions import RecordsNotFound
+from src.lib import SERVER_ERROR
+from src.logging import LOGGER
 from src.models.base_command_model import BaseCommandModel
 
 
@@ -29,10 +30,12 @@ async def get_text_by_command_name(name: str) -> str:
         else:
             raise RecordsNotFound()
     except RecordsNotFound as e:
-        return str(e)
+        msg = str(e)
+        LOGGER.warning(msg)
+        return msg
     except Exception as e:
-        # TODO logger
-        raise e
+        LOGGER.exception(e)
+        return SERVER_ERROR
 
 
 async def update_or_add_record_by_name(name: str, text: str) -> bool:
@@ -60,6 +63,6 @@ async def update_or_add_record_by_name(name: str, text: str) -> bool:
                 session.add(instance)
             await session.commit()
         return True
-    except Exception:
-        # TODO logger
+    except Exception as e:
+        LOGGER.exception(e)
         return False

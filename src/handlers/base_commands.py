@@ -1,7 +1,6 @@
 from aiogram import Router
 from aiogram.filters import CommandStart
 from aiogram.types import Message
-
 from src.services.base_commands_service import get_text_by_command_name
 
 
