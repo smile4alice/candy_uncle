@@ -38,10 +38,9 @@ jobs:
           pip install -r requirements.txt
       - name: Export variables from secret
         env:
-          ENV_VARS: ${{ vars }}
+          ENV_FOR_TESTS: ${{ secrets.ENV_FOR_TESTS }}
         run: |
-          echo $ENV_VARS
-          echo $ENV_VARS > .env
+          echo $ENV_FOR_TESTS | base64 --decode > .env
           cat .env
       - name: Run tests
         run: pytest
