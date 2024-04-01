@@ -36,8 +36,12 @@ jobs:
         run: |
           pip install -U pip
           pip install -r requirements.txt
-      - name: Run tests
+      - name: Export variables from secret
         env:
-          IS_PROD: ${{ vars.IS_PROD }}
-          POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
+          ENV_VARS: ${{ vars }}
+        run: |
+          echo $ENV_VARS
+          echo $ENV_VARS > .env
+          cat .env
+      - name: Run tests
         run: pytest
