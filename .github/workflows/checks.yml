@@ -36,12 +36,7 @@ jobs:
         run: |
           pip install -U pip
           pip install -r requirements.txt
-      - name: Export variables from secret
-        env:
-          ENV_FOR_TESTS: ${{ secrets.ENV_FOR_TESTS }}
-        run: |
-          echo $ENV_FOR_TESTS
-          echo $ENV_FOR_TESTS > .env
-          cat .env
       - name: Run tests
+        env:
+          IS_PROD: ${{ vars.IS_PROD }}
         run: pytest
