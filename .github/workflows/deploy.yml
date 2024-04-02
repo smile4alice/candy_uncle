@@ -1,8 +1,9 @@
-name: Deploy
+name: CD
  
 on:
+
   push:
-    branches: [ dev ]
+    branches: [ main ]
 
 jobs:
   build:
@@ -12,7 +13,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: test job
+    - name: Apply ssh actions
       uses: fifsky/ssh-action@master
       with:
         command: |
