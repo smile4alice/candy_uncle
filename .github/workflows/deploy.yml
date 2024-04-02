@@ -17,7 +17,8 @@ jobs:
       with:
         command: |
           cd ~/candy_uncle
-          touch test.txt
+          git pull
+          make prod
         host: ${{ secrets.HOST }}
         user: ${{ secrets.USERNAME }}
         key: ${{ secrets.SSHKEY}}
