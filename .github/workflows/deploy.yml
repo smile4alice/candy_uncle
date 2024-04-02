@@ -14,9 +14,9 @@ jobs:
 
     - name: Set up SSH key
       run: |
-        echo "${{ secrets.SSHKEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-
+        echo "${{ secrets.SSHKEY }}" > ~/deploy_key
+        chmod 600 ~/deploy_key
+        
     - name: executing remote ssh commands using password
       env:
         SSH_USERNAME: ${{ secrets.USERNAME }}
@@ -26,4 +26,4 @@ jobs:
           "cd ~/candy_uncle"
           "touch test.txt"
         )
-        ssh -i ~/.ssh/id_rsa $SSH_USERNAME@$SSH_HOST "${commands[@]}"
+        ssh -i ~/deploy_key $SSH_USERNAME@$SSH_HOST "${commands[@]}"
