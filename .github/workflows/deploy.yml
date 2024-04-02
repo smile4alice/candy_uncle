@@ -12,18 +12,12 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up SSH key
-      run: |
-        echo "${{ secrets.SSHKEY }}" > ~/deploy_key
-        chmod 600 ~/deploy_key
-        
-    - name: executing remote ssh commands using password
-      env:
-        SSH_USERNAME: ${{ secrets.USERNAME }}
-        SSH_HOST: ${{ secrets.HOST }}
-      run: |
-        commands=(
-          "cd ~/candy_uncle"
-          "touch test.txt"
-        )
-        ssh -i ~/deploy_key $SSH_USERNAME@$SSH_HOST "${commands[@]}"
+    - name: test job
+      uses: fifsky/ssh-action@master
+      with:
+        command: |
+          cd /tmp
+          ls -a
+        host: ${{ secrets.HOST }}
+        user: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSHKEY}}
