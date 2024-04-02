@@ -3,7 +3,7 @@ name: Deploy
 on:
   push:
     branches: [ dev ]
-    
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,14 +12,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: test job
-      uses: appleboy/ssh-action@v0.1.10
+    - name: executing remote ssh commands using password
+      uses: appleboy/ssh-action@v0.1.9
       with:
-        key: ${{ secrets.SSHKEY }}
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
-        command_timeout: 30m
-        script: | 
-            cd ~/candy_uncle
-            touch test.txt
+        script: touch ~/candy_uncle/test.txt
