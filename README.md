@@ -163,7 +163,7 @@ sudo openssl req -newkey rsa:2048 -sha256 -nodes -keyout /etc/nginx/certificates
 copy it to project dirrectory
 ```bash
 mkdir certificates
-sudo cp /etc/nginx/certificates/*self-signed* .
+sudo cp /etc/nginx/certificates/*self-signed* certificates/
 ```
 
 before run project
