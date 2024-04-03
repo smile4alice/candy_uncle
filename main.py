@@ -22,7 +22,7 @@ async def on_startup(bot: Bot) -> None:
     )
 
 
-def start_web_app(dp: Dispatcher, bot: Bot):
+def start_web_app(dp: Dispatcher, bot: Bot, loop: asyncio.AbstractEventLoop):
     # Register startup hook to initialize webhook
     dp.startup.register(on_startup)
 
@@ -43,10 +43,11 @@ def start_web_app(dp: Dispatcher, bot: Bot):
         app,
         host=SETTINGS.WEB_SERVER_HOST,
         port=SETTINGS.WEB_SERVER_PORT,
+        loop=loop,
     )
 
 
-async def main():
+async def main(loop: asyncio.AbstractEventLoop):
     LOGGER.info("Bot is started")
 
     bot = Bot(token=SETTINGS.BOT_TOKEN)
@@ -55,11 +56,12 @@ async def main():
     dp.include_routers(*ROUTERS)
 
     if SETTINGS.ENVIRONMENT == Environment.PRODUCTION:
-        start_web_app(dp, bot)
+        start_web_app(dp, bot, loop)
     else:
         await bot.delete_webhook(drop_pending_updates=True)
         await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main(loop))
