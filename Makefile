@@ -19,7 +19,6 @@ endef
 
 init:
 	pip install -r requirements.txt
-	pre-commit install
 
 prod: down build
 
@@ -36,10 +35,11 @@ dev: down
 	$(START_COMMAND)
 
 pre_commit:
+	pre-commit install
 	sh scripts/pre_commit.sh
 
-export_secret:
-	base64 -w 0 .env > secret.base64
+export_env:
+	base64 -w 0 .env > env.base64
 
 tests:
 	docker compose up postgres_tests -d

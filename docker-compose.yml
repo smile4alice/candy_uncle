@@ -1,4 +1,3 @@
-version: "3.8"
 services:
 
   postgres: &pg_base
@@ -56,7 +55,8 @@ services:
       - .env
     entrypoint: sh "scripts/backend.sh"
     ports:
-      - $WEB_SERVER_PORT:$WEB_SERVER_PORT
+      - "${WEB_SERVER_PORT:-5000}:${WEB_SERVER_PORT:-5000}"
+
     depends_on:
       postgres:
         condition: service_healthy

@@ -22,6 +22,6 @@ repos:
 
       - id: mypy
         name: mypy
-        entry: mypy --config-file=pre_commit/mypy.cfg
+        entry: bash -c "mypy --config-file=pre_commit/mypy.cfg ."
         language: system
         types: [ python ]

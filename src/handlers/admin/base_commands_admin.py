@@ -4,7 +4,7 @@ from aiogram.types import Message
 from src.exceptions import InvalidCommandError
 from src.lib import SERVER_ERROR
 from src.logging import LOGGER
-from src.services.base_commands_service import update_or_add_record_by_name
+from src.services.base_commands import update_or_add_record_by_name
 
 
 admin_base_commands_router = Router()
