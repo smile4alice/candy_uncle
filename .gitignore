@@ -1,5 +1,6 @@
 # Secrets
-secret.base64
+env.base64
+certificates/
 
 # VS code config
 .vscode*
