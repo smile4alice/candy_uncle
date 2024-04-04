@@ -16,7 +16,7 @@ async def on_startup(bot: Bot) -> None:
     # If you have a self-signed SSL certificate, then you will need to send a public
     # certificate to Telegram
     await bot.set_webhook(
-        f"{SETTINGS.WEB_SERVER_HOST}{SETTINGS.WEBHOOK_PATH}",
+        f"{SETTINGS.WEBHOOK_HOST}{SETTINGS.WEBHOOK_PATH}",
         certificate=FSInputFile(SETTINGS.WEBHOOK_SSL_CERT),
         secret_token=SETTINGS.WEBHOOK_SECRET,
     )
@@ -47,7 +47,7 @@ def start_web_app(dp: Dispatcher, bot: Bot, loop: asyncio.AbstractEventLoop):
     )
 
 
-async def main(loop: asyncio.AbstractEventLoop):
+def main(loop: asyncio.AbstractEventLoop):
     LOGGER.info("Bot is started")
 
     bot = Bot(token=SETTINGS.BOT_TOKEN)
@@ -58,10 +58,10 @@ async def main(loop: asyncio.AbstractEventLoop):
     if SETTINGS.ENVIRONMENT == Environment.PRODUCTION:
         start_web_app(dp, bot, loop)
     else:
-        await bot.delete_webhook(drop_pending_updates=True)
-        await dp.start_polling(bot)
+        loop.run_until_complete(bot.delete_webhook(drop_pending_updates=True))
+        loop.run_until_complete(dp.start_polling(bot))
 
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(main(loop))
+    main(loop)

@@ -74,7 +74,7 @@ class Settings(BaseSettings):
         "WEB_SERVER_PORT",
         "WEBHOOK_SSL_CERT",
         "WEBHOOK_SSL_PRIV",
-        mode="plain",
+        mode="after",
     )
     @classmethod
     def webhook_fields(cls, value: str, info: ValidationInfo) -> str:
