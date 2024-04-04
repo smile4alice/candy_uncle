@@ -1,8 +1,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
-from src.handlers.admin.base_commands_admin import process_update_command
-from src.handlers.base_commands import process_start
+from src.handlers.base_commands import process_start, process_update_command
 
 
 @pytest.fixture(scope="session")

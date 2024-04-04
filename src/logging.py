@@ -101,9 +101,11 @@ def init_logger() -> logging.Logger:
     logs_date_format = " %Y-%m-%d %H:%M:%S"
     formatter = logging.Formatter(logs_format, logs_date_format)
 
+    logger = logging.getLogger()
+    logger.setLevel("INFO")
+
     console_hanlder = logging.StreamHandler()
     console_hanlder.setFormatter(formatter)
-    console_hanlder.setLevel("INFO")
 
     special_handler = SpecialHandler(
         AiogramLogSender(
@@ -114,7 +116,6 @@ def init_logger() -> logging.Logger:
     special_handler.setFormatter(formatter)
     special_handler.setLevel("WARNING")
 
-    logger = logging.getLogger()
     logger.addHandler(special_handler)
     logger.addHandler(console_hanlder)
     return logger

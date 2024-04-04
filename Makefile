@@ -51,5 +51,5 @@ tests:
 drop_db: down 
 	if docker volume ls -q | grep -q $(DB_VOLUME); then \
 		docker volume rm $(DB_VOLUME); \
-		echo "successfully drop_db 1";\
+		echo "successfully drop ${DB_VOLUME}";\
 	fi
