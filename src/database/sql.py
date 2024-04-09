@@ -1,15 +1,20 @@
-from sqlalchemy.ext.asyncio import (
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
-from sqlalchemy.orm import declarative_base
+from datetime import datetime
+
+from sqlalchemy import func
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
 from src.config import SETTINGS
 
 
-Base = declarative_base()
+engine = create_async_engine(url=SETTINGS.SQL_DSN, echo=True)
+session_factory = async_sessionmaker(engine)
 
-engine = create_async_engine(url=SETTINGS.sql_dsn)
-async_session_maker = async_sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False
-)
+
+class Base(DeclarativeBase):
+    pass
+
+
+class TimestampMixin:
+    creation_date: Mapped[datetime] = mapped_column(server_default=func.now())
+    modification_date: Mapped[datetime] = mapped_column(onupdate=func.now())

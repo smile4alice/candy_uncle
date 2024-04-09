@@ -1,6 +1,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+
 from src.handlers.base_commands import process_start, process_update_command
 
 

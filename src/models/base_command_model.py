@@ -1,12 +1,14 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column
+
 from src.database import Base
 
 
-class BaseCommandModel(Base):
+class BaseCommand(Base):
     """Model for default commands"""
 
     __tablename__ = "base_commands"
 
-    id: int = Column(Integer, primary_key=True)
-    name: str = Column(String(length=255), nullable=False, unique=True)
-    text: str = Column(String(length=4096), nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(length=100), unique=True)
+    text: Mapped[str] = mapped_column(String(length=4096))

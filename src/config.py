@@ -10,27 +10,10 @@ Example:
     bot_token = SETTINGS.BOT_TOKEN
 """
 
-from enum import Enum
-
 from pydantic import ValidationInfo, field_validator
 from pydantic_settings import BaseSettings
 
-
-class Environment(Enum):
-    TESTING = "TESTING"
-    DEVELOPMENT = "DEVELOPMENT"
-    PRODUCTION = "PRODUCTION"
-
-
-class DatabaseSettings(BaseSettings):
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
-    POSTGRES_HOST: str
-    POSTGRES_PORT: str
-    POSTGRES_DB: str
-
-
-db_settings = DatabaseSettings()
+from src.enums import Environment
 
 
 class Settings(BaseSettings):
@@ -58,14 +41,22 @@ class Settings(BaseSettings):
     WEBHOOK_SSL_CERT: str = ""
     WEBHOOK_SSL_PRIV: str = ""
 
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_HOST: str
+    POSTGRES_PORT: int
+    POSTGRES_DB: str
+
     REDIS_PASSWORD: str
     REDIS_HOST: str
     REDIS_PORT: int
 
-    sql_dsn: str = (
-        f"postgresql+asyncpg://{db_settings.POSTGRES_USER}:{db_settings.POSTGRES_PASSWORD}"
-        f"@{db_settings.POSTGRES_HOST}:{db_settings.POSTGRES_PORT}/{db_settings.POSTGRES_DB}"
-    )
+    @property
+    def SQL_DSN(self) -> str:
+        return (
+            f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        )
 
     @field_validator(
         "WEBHOOK_HOST",

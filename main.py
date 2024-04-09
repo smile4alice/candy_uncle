@@ -7,7 +7,9 @@ from aiogram.webhook.aiohttp_server import (
     setup_application,
 )
 from aiohttp import web
+
 from src.config import SETTINGS, Environment
+from src.database.nosql import STORAGE
 from src.handlers import ROUTERS
 from src.logging import LOGGER
 
@@ -51,7 +53,7 @@ def main(loop: asyncio.AbstractEventLoop):
     LOGGER.info("Bot is started")
 
     bot = Bot(token=SETTINGS.BOT_TOKEN)
-    dp = Dispatcher()
+    dp = Dispatcher(storage=STORAGE)
 
     dp.include_routers(*ROUTERS)
 

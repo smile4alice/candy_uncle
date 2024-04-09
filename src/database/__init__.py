@@ -1,7 +1,8 @@
-from .sql import Base, async_session_maker
+from .sql import Base, TimestampMixin, session_factory
 
 
 __all__ = (
     "Base",
-    "async_session_maker",
+    "TimestampMixin",
+    "session_factory",
 )
