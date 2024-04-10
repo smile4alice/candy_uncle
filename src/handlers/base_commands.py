@@ -1,4 +1,4 @@
-from aiogram import Router
+from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
@@ -24,7 +24,7 @@ async def process_delete_command(message: Message):
 
 
 # GET COMMANDS
-@base_commands_router.message(IsCommand())
+@base_commands_router.message(F.text, IsCommand())
 async def process_commands(message: Message):
     text = await CommandService.get_command_text(message.text)  # type: ignore
     await message.reply(text=text)

@@ -17,18 +17,16 @@ class Trigger(Base):
     trigger: Mapped[str] = mapped_column(String(length=4096))
     chat_id: Mapped[int]
 
-    answers: Mapped[List["TriggersAnswer"]] = relationship(
-        back_populates="trigger", lazy="selectin"
-    )
+    answers: Mapped[List["TriggerAnswer"]] = relationship(back_populates="trigger")
 
 
-class TriggersAnswer(Base):
-    __tablename__ = "triggers_answers"
+class TriggerAnswer(Base):
+    __tablename__ = "trigger_answer"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     is_active: Mapped[bool] = mapped_column(default=True)
-    answer_type: Mapped[MediaTypeEnum]
+    media_type: Mapped[MediaTypeEnum]
     answer: Mapped[str] = mapped_column(String(length=4096))
     trigger_id: Mapped[int] = mapped_column(ForeignKey("triggers.id"))
 
-    trigger: Mapped["Trigger"] = relationship(back_populates="answers", lazy="selectin")
+    trigger: Mapped["Trigger"] = relationship(back_populates="answers")

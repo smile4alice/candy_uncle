@@ -8,7 +8,7 @@ from src.config import SETTINGS
 
 
 engine = create_async_engine(url=SETTINGS.SQL_DSN, echo=True)
-session_factory = async_sessionmaker(engine)
+session_factory = async_sessionmaker(engine, expire_on_commit=False)
 
 
 class Base(DeclarativeBase):

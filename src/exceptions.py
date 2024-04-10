@@ -39,5 +39,5 @@ class InvalidCommandError(Exception):
         """
         self.message = message
         if example:
-            self.message += example
+            self.message += f"\nExample: {example}"
         super().__init__(self.message)

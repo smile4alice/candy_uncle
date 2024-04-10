@@ -65,7 +65,7 @@ class AiogramLogSender(BaseSender):
     def send_logs(self, msg: str) -> Coroutine:
         """Create and return a coroutine for sending log messages to the specified chat."""
         coroutine = self.bot.send_message(
-            chat_id=self.chat_id, text=msg, parse_mode=ParseMode.MARKDOWN_V2
+            chat_id=self.chat_id, text=msg, parse_mode=ParseMode.MARKDOWN
         )
         return coroutine
 

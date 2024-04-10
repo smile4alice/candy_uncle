@@ -11,6 +11,7 @@ class MediaTypeEnum(Enum):
     TEXT = "text"
     PHOTO = "photo"
     ANIMATION = "animation"
+    STICKER = "sticker"
     VIDEO = "video"
     VOICE = "voice"
     AUDIO = "audio"

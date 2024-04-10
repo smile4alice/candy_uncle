@@ -34,15 +34,15 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
-        "triggers_answers",
+        "trigger_answer",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False),
         sa.Column(
-            "answer_type",
+            "media_type",
             sa.Enum(
                 "TEXT",
                 "PHOTO",
-                "ANIMATION",
+                "STICKER",
                 "VIDEO",
                 "VOICE",
                 "AUDIO",
@@ -77,6 +77,6 @@ def downgrade() -> None:
         type_=sa.VARCHAR(length=255),
         existing_nullable=False,
     )
-    op.drop_table("triggers_answers")
+    op.drop_table("trigger_answer")
     op.drop_table("triggers")
     # ### end Alembic commands ###
