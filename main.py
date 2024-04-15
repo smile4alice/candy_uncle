@@ -1,13 +1,17 @@
 import asyncio
 
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums.parse_mode import ParseMode
 from aiogram.types import FSInputFile
 from aiogram.webhook.aiohttp_server import (
     SimpleRequestHandler,
     setup_application,
 )
 from aiohttp import web
+
 from src.config import SETTINGS, Environment
+from src.database.nosql import STORAGE
 from src.handlers import ROUTERS
 from src.logging import LOGGER
 
@@ -50,8 +54,11 @@ def start_web_app(dp: Dispatcher, bot: Bot, loop: asyncio.AbstractEventLoop):
 def main(loop: asyncio.AbstractEventLoop):
     LOGGER.info("Bot is started")
 
-    bot = Bot(token=SETTINGS.BOT_TOKEN)
-    dp = Dispatcher()
+    bot = Bot(
+        token=SETTINGS.BOT_TOKEN,
+        default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN),
+    )
+    dp = Dispatcher(storage=STORAGE)
 
     dp.include_routers(*ROUTERS)
 

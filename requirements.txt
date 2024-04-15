@@ -46,3 +46,4 @@ SQLAlchemy==2.0.29
 typing_extensions==4.10.0
 virtualenv==20.25.1
 yarl==1.9.4
+redis==5.0.3

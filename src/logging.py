@@ -16,6 +16,7 @@ from typing import Coroutine
 
 from aiogram import Bot
 from aiogram.enums.parse_mode import ParseMode
+
 from src.config import SETTINGS
 
 
@@ -64,7 +65,7 @@ class AiogramLogSender(BaseSender):
     def send_logs(self, msg: str) -> Coroutine:
         """Create and return a coroutine for sending log messages to the specified chat."""
         coroutine = self.bot.send_message(
-            chat_id=self.chat_id, text=msg, parse_mode=ParseMode.MARKDOWN_V2
+            chat_id=self.chat_id, text=msg, parse_mode=ParseMode.MARKDOWN
         )
         return coroutine
 
@@ -101,9 +102,11 @@ def init_logger() -> logging.Logger:
     logs_date_format = " %Y-%m-%d %H:%M:%S"
     formatter = logging.Formatter(logs_format, logs_date_format)
 
+    logger = logging.getLogger()
+    logger.setLevel("INFO")
+
     console_hanlder = logging.StreamHandler()
     console_hanlder.setFormatter(formatter)
-    console_hanlder.setLevel("INFO")
 
     special_handler = SpecialHandler(
         AiogramLogSender(
@@ -114,7 +117,6 @@ def init_logger() -> logging.Logger:
     special_handler.setFormatter(formatter)
     special_handler.setLevel("WARNING")
 
-    logger = logging.getLogger()
     logger.addHandler(special_handler)
     logger.addHandler(console_hanlder)
     return logger

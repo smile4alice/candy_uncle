@@ -1,7 +1,8 @@
 import pytest
 from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import create_async_engine
-from src.database import Base, async_session_maker
+
+from src.database import Base, session_factory
 
 
 DATABASE_URL_TEST = "postgresql+asyncpg://test_u:test_p@localhost:6999/test_db"
@@ -11,7 +12,7 @@ async def create_database():
     global engine_test
     engine_test = create_async_engine(DATABASE_URL_TEST, poolclass=NullPool)
     Base.metadata.bind = engine_test
-    async_session_maker.kw["bind"] = engine_test
+    session_factory.kw["bind"] = engine_test
     async with engine_test.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 

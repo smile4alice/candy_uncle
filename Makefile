@@ -3,6 +3,8 @@
 START_COMMAND := python main.py
 DB_CONTAINER := postgres_uncle
 DB_VOLUME := $$(basename "$$(pwd)")_postgres_data
+REDIS_CONTAINER := redis_uncle
+REDIS_VOLUME := $$(basename "$$(pwd)")_redis_data
 TESTS_DB_CONTAINER := postgres_tests_uncle
 TESTS_DB_VOLUME := $$(basename "$$(pwd)")_postgres_tests_data
 
@@ -31,6 +33,7 @@ build:
 dev: down
 	docker compose up postgres redis -d
 	$(call docker_start_lock,$(DB_CONTAINER))
+	$(call docker_start_lock,$(REDIS_CONTAINER))
 	alembic upgrade head
 	$(START_COMMAND)
 
@@ -51,5 +54,9 @@ tests:
 drop_db: down 
 	if docker volume ls -q | grep -q $(DB_VOLUME); then \
 		docker volume rm $(DB_VOLUME); \
-		echo "successfully drop_db 1";\
+		echo "successfully drop ${DB_VOLUME}";\
+	fi
+	if docker volume ls -q | grep -q $(REDIS_VOLUME); then \
+		docker volume rm $(REDIS_VOLUME); \
+		echo "successfully drop ${REDIS_VOLUME}";\
 	fi

@@ -34,8 +34,7 @@ services:
     container_name: redis_uncle
     ports:
       - $REDIS_PORT:$REDIS_PORT
-    environment:
-      - REDIS_PASSWORD=$REDIS_PASSWORD
+    command: [--requirepass $REDIS_PASSWORD]
     restart: always
     volumes:
       - redis_data:/data

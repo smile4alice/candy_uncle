@@ -3,6 +3,7 @@ from random import randint, uniform
 from re import findall
 
 from aiogram.types import User
+
 from src.lib import SERVER_ERROR
 from src.logging import LOGGER
 
