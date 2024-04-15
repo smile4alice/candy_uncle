@@ -12,7 +12,11 @@ from src.logging import LOGGER
 from src.models import Trigger, TriggerAnswer
 
 
-class TriggerService:
+class TriggerEventORM:
+    pass  # TODO
+
+
+class TriggerEventService:
     @staticmethod
     async def detect_triggers(text: str, chat_id: int) -> Trigger | None:
         try:
@@ -39,7 +43,7 @@ class TriggerService:
             return None
 
     @staticmethod
-    async def put_trigger(text: str, chat_id: int) -> str:
+    async def put_trigger_event(text: str, chat_id: int) -> str:
         try:
             command_data: list = findall(
                 r"\S+\s+(\S+)\s+(.+[^\sregex])\s*(regex$)?", text
@@ -77,7 +81,7 @@ class TriggerService:
             return SERVER_ERROR
 
     @staticmethod
-    async def delete_trigger(text: str, chat_id: int) -> str:
+    async def delete_trigger_event(text: str, chat_id: int) -> str:
         try:
             command_data = text.lower().split()
             if len(command_data) < 2:
@@ -102,10 +106,14 @@ class TriggerService:
             return SERVER_ERROR
 
 
+class TriggerAnswerORM:
+    pass  # TODO
+
+
 class TriggerAnswerService:
     @staticmethod
     async def get_answer(text: str, chat_id: int) -> TriggerAnswer | str:
-        trigger = await TriggerService.detect_triggers(text=text, chat_id=chat_id)
+        trigger = await TriggerEventService.detect_triggers(text=text, chat_id=chat_id)
         random_answer_query = (
             select(TriggerAnswer)
             .filter_by(is_active=True, trigger_id=trigger.id)
@@ -160,7 +168,7 @@ class TriggerAnswerService:
                     )
                     session.add(answer_instance)
                 await session.commit()
-                text = "✅put:\n" + f"#{answer_instance.id} `{answer_instance.answer}`"
+                text = "☑️put:\n" + f"#{answer_instance.id} `{answer_instance.answer}`"
                 return text
         except RecordsNotFound as e:
             msg = str(e)

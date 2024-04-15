@@ -1,9 +1,9 @@
-from .base_command_model import BaseCommand
+from .info_command import InfoCommand
 from .triggers import Trigger, TriggerAnswer
 
 
 __all__ = (
-    "BaseCommand",
+    "InfoCommand",
     "Trigger",
     "TriggerAnswer",
 )

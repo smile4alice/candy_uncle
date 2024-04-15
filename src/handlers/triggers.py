@@ -13,23 +13,23 @@ from src.keyboards.triggers import (
     get_cancel_state_keyboard,
     get_trigger_keyboards,
 )
-from src.services.triggers import TriggerAnswerService, TriggerService
+from src.services.triggers import TriggerAnswerService, TriggerEventService
 
 
 triggers_router: Router = Router()
 
 
 # TRIGGERS PUT
-@triggers_router.message(Command("triggers_put"))
-async def process_triggers_put(message: Message):
-    res = await TriggerService.put_trigger(text=message.text, chat_id=message.chat.id)  # type: ignore
+@triggers_router.message(Command("put_trigger_event"))
+async def process_put_trigger_event(message: Message):
+    res = await TriggerEventService.put_trigger_event(text=message.text, chat_id=message.chat.id)  # type: ignore
     await message.reply(text=res)
 
 
 # TRIGGER DELETE
-@triggers_router.message(Command("triggers_delete"))
-async def process_triggers_delete(message: Message):
-    res = await TriggerService.delete_trigger(text=message.text, chat_id=message.chat.id)  # type: ignore
+@triggers_router.message(Command("delete_trigger_event"))
+async def process_delete_trigger_event(message: Message):
+    res = await TriggerEventService.delete_trigger_event(text=message.text, chat_id=message.chat.id)  # type: ignore
     await message.reply(text=res)
 
 
