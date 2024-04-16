@@ -53,7 +53,7 @@ async def test_delete_non_exist_command_():
 
 
 async def test_delete_without_command():
-    text_mock = "/delete_command test"
+    text_mock = "/delete_command"
     message_mock = AsyncMock(text=text_mock)
     await process_delete_command(message=message_mock)
     message_mock.reply.assert_called_with(
