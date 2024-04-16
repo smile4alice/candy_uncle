@@ -2,7 +2,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import session_factory
-from src.exceptions import InvalidCommandError
+from src.exceptions import InvalidCommandError, RecordsNotFound
 from src.lib import SERVER_ERROR
 from src.logging import LOGGER
 from src.models.info_command import InfoCommand
@@ -13,7 +13,8 @@ class InfoCommandORM:
 
     @staticmethod
     async def get_one_by_name(
-        name: str, current_session: AsyncSession | None = None
+        name: str,
+        current_session: AsyncSession | None = None,
     ) -> InfoCommand | None:
         """
         Get command filtered by name.
@@ -95,11 +96,11 @@ class InfoCommandService:
 
         :param text (str): The Message text with command name by filter in the database.
         :return (str): command data if the command name is found in the database,
-         else RecordsNotFound warning text.
+         else InvalidCommandError warning text.
         """
         try:
             command_name = cls._get_name_from_command(text)
-            record = await InfoCommandORM.get_one_by_name(name=command_name)
+            record = await InfoCommandORM.get_one_by_name(command_name)
             if record:
                 return record.info
             else:
@@ -124,15 +125,15 @@ class InfoCommandService:
         try:
             command_data = text.lower().split()
             if len(command_data) < 3:
-                example = "/put_command start Hello. I'm a beautiful bot."
+                example = "<code>/put_command start Hello. I'm a beautiful bot.</code>"
                 raise InvalidCommandError(example=example)
             else:
                 command_name = command_data[1]
                 command_info = " ".join(command_data[2:])
-                await InfoCommandORM.update_or_add_by_name(
-                    name=command_name, info=command_info
+                await InfoCommandORM.update_or_add_by_name(command_name, command_info)
+                return (
+                    f"☑️put:\n<code>{command_name}</code> = <code>{command_info}</code>"
                 )
-                return f"☑️put:\n`{command_name}` = `{command_info}`"
         except InvalidCommandError as e:
             return str(e)
         except Exception as e:
@@ -150,18 +151,21 @@ class InfoCommandService:
         try:
             command_data = text.lower().split()
             if len(command_data) < 2:
-                example = "delete_command start"
+                example = "<code>/delete_command start</code>"
                 raise InvalidCommandError(example=example)
             else:
                 command_name = command_data[1]
 
-            result = await InfoCommandORM.delete_by_name(name=command_name)
+            result = await InfoCommandORM.delete_by_name(command_name)
             if result:
-                response = f"☑️delete: `{command_name}`"
+                return f"☑️delete: <code>{command_name}</code>"
             else:
-                response = f"❌not found: `{command_name}`"
-            return response
+                raise RecordsNotFound(
+                    message=f"❌not found: <code>{command_name}</code>"
+                )
         except InvalidCommandError as e:
+            return str(e)
+        except RecordsNotFound as e:
             return str(e)
         except Exception as e:
             LOGGER.exception(e)

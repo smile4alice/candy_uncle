@@ -32,7 +32,8 @@ class RollService:
         """
         try:
             extract_digit = findall(
-                r"(^\/[rр][оo][lл]{1,})\s*(\d*[.,]*\d*)(.*)", text.lower()
+                r"(^\/[rр][оo][lл]{1,})\s*(\d*[.,]*\d*)(.*)",
+                text.lower(),
             )[0][1]
             min_digit = 1
             if not extract_digit or extract_digit == "0":
@@ -46,7 +47,11 @@ class RollService:
                 max_digit = max_digit if max_digit > 0.1 else 1.0  # type: ignore
                 min_digit = 1.0 if max_digit > 1.0 else 0.1  # type: ignore
                 result = round(uniform(min_digit, max_digit), 2)  # type: ignore
-            return Roll(max_digit=max_digit, result=result, min_digit=min_digit)
+            return Roll(
+                max_digit=max_digit,
+                result=result,
+                min_digit=min_digit,
+            )
         except IndexError:
             return f'{text} != template "/roll OPTIONAL[max_digit]"'
         except Exception as exc:

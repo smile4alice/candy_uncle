@@ -1,9 +1,9 @@
 from .info_command import InfoCommand
-from .triggers import Trigger, TriggerAnswer
+from .trigger_events import Trigger, TriggerEvent
 
 
 __all__ = (
     "InfoCommand",
+    "TriggerEvent",
     "Trigger",
-    "TriggerAnswer",
 )

@@ -7,26 +7,26 @@ from src.database import Base
 from src.enums import MatchTypeEnum, MediaTypeEnum
 
 
-class Trigger(Base):
-    __tablename__ = "triggers"
+class TriggerEvent(Base):
+    __tablename__ = "trigger_events"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     is_active: Mapped[bool] = mapped_column(default=True)
     match_type: Mapped[MatchTypeEnum] = mapped_column(default=MatchTypeEnum.text)
     name: Mapped[str] = mapped_column(String(length=100))
-    trigger: Mapped[str] = mapped_column(String(length=4096))
+    event: Mapped[str] = mapped_column(String(length=4096))
     chat_id: Mapped[int]
 
-    answers: Mapped[List["TriggerAnswer"]] = relationship(back_populates="trigger")
+    triggers: Mapped[List["Trigger"]] = relationship(back_populates="trigger_event")
 
 
-class TriggerAnswer(Base):
-    __tablename__ = "trigger_answer"
+class Trigger(Base):
+    __tablename__ = "triggers"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     is_active: Mapped[bool] = mapped_column(default=True)
     media_type: Mapped[MediaTypeEnum]
-    answer: Mapped[str] = mapped_column(String(length=4096))
-    trigger_id: Mapped[int] = mapped_column(ForeignKey("triggers.id"))
+    media: Mapped[str] = mapped_column(String(length=4096))
+    trigger_event_id: Mapped[int] = mapped_column(ForeignKey("trigger_events.id"))
 
-    trigger: Mapped["Trigger"] = relationship(back_populates="answers")
+    trigger_event: Mapped["TriggerEvent"] = relationship(back_populates="triggers")

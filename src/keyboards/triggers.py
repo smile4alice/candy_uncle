@@ -8,7 +8,7 @@ from src.filters.callback_data.rect_callback import (
 
 def get_cancel_state_keyboard(message_id: int, chat_id: int) -> InlineKeyboardMarkup:
     cancel_button = InlineKeyboardButton(
-        text="скасувати❌",
+        text="✖️cancel",
         callback_data=CancelTriggerCallback(
             user_message_id=message_id,
             chat_id=chat_id,
@@ -18,7 +18,9 @@ def get_cancel_state_keyboard(message_id: int, chat_id: int) -> InlineKeyboardMa
     return keyboard
 
 
-def get_trigger_keyboards(trigger_name: str) -> InlineKeyboardMarkup:
+def get_trigger_keyboards(
+    trigger_name: str,
+) -> InlineKeyboardMarkup:
     keyboard_text = InlineKeyboardButton(
         text="text",
         switch_inline_query_current_chat=f"#{trigger_name}_text",
@@ -32,13 +34,19 @@ def get_trigger_keyboards(trigger_name: str) -> InlineKeyboardMarkup:
         switch_inline_query_current_chat=f"#{trigger_name}_sticker",
     )
     keyboards = InlineKeyboardMarkup(
-        inline_keyboard=[[keyboard_text], [keyboard_animation], [keyboard_sticker]]
+        inline_keyboard=[
+            [keyboard_text],
+            [keyboard_animation],
+            [keyboard_sticker],
+        ]
     )
     return keyboards
 
 
 def get_manage_answer_keyboards(
-    trigger_name: str, answer_id: int, edit_data: str | None = None
+    trigger_name: str,
+    answer_id: int,
+    edit_data: str | None = None,
 ) -> InlineKeyboardMarkup:
     delete_button = InlineKeyboardButton(
         text=f"❌delete_trigger_{trigger_name}_{answer_id}",

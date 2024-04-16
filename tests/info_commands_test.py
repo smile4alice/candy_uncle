@@ -19,7 +19,7 @@ async def test_put_command(start_command_text: str):
     message_mock = AsyncMock(text=text_mock)
     await process_put_command(message=message_mock)
     message_mock.reply.assert_called_with(
-        text=f"☑️put:\n`start` = `{start_command_text}`"
+        text=f"☑️put:\n<code>start</code> = <code>{start_command_text}</code>"
     )
 
 
@@ -27,7 +27,7 @@ async def test_put_command_without_text():
     text_mock = "/put_command"
     message_mock = AsyncMock(text=text_mock)
     await process_put_command(message=message_mock)
-    error_msg = "Incorrect bot command entered.\nExample: /put_command start Hello. I'm a beautiful bot."
+    error_msg = "Incorrect bot command entered.\nExample: <code>/put_command start Hello. I'm a beautiful bot.</code>"
     message_mock.reply.assert_called_with(text=error_msg)
 
 
@@ -42,11 +42,20 @@ async def test_delete_command():
     text_mock = "/delete_command start"
     message_mock = AsyncMock(text=text_mock)
     await process_delete_command(message=message_mock)
-    message_mock.reply.assert_called_with(text="☑️delete: `start`")
+    message_mock.reply.assert_called_with(text="☑️delete: <code>start</code>")
 
 
 async def test_delete_non_exist_command_():
     text_mock = "/delete_command test"
     message_mock = AsyncMock(text=text_mock)
     await process_delete_command(message=message_mock)
-    message_mock.reply.assert_called_with(text="❌not found: `test`")
+    message_mock.reply.assert_called_with(text="❌not found: <code>test</code>")
+
+
+async def test_delete_without_command():
+    text_mock = "/delete_command test"
+    message_mock = AsyncMock(text=text_mock)
+    await process_delete_command(message=message_mock)
+    message_mock.reply.assert_called_with(
+        text="Incorrect bot command entered.\nExample: <code>/delete_command start</code>"
+    )

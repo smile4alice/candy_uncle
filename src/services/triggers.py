@@ -1,7 +1,7 @@
 from re import findall
 from typing import Sequence
 
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import and_, delete, func, literal, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import session_factory
@@ -9,71 +9,145 @@ from src.enums import MatchTypeEnum, MediaTypeEnum
 from src.exceptions import InvalidCommandError, RecordsNotFound
 from src.lib import SERVER_ERROR
 from src.logging import LOGGER
-from src.models import Trigger, TriggerAnswer
+from src.models import Trigger, TriggerEvent
 
 
 class TriggerEventORM:
-    pass  # TODO
+    """Methods of interacting with the database using SQLAlchemy"""
+
+    @staticmethod
+    async def search_trigger_in_text(text: str, chat_id: int) -> TriggerEvent | None:
+        """Search for a TriggerEvent in the database based on text and chat_id.
+
+        :param text: The text to search for.
+        :param chat_id: The chat ID to filter by.
+        :return: The TriggerEvent that matches the search criteria, or None if not found.
+        """
+        async with session_factory() as session:
+            query = select(TriggerEvent).filter_by(is_active=True, chat_id=chat_id)
+            search_condition = or_(
+                and_(
+                    TriggerEvent.match_type == MatchTypeEnum.text,
+                    literal(text).icontains(TriggerEvent.event),
+                ),
+                and_(
+                    TriggerEvent.match_type == MatchTypeEnum.regex,
+                    literal(text).op("~*")(TriggerEvent.event),
+                ),
+            )
+            query = query.where(search_condition)
+            result = await session.execute(query)
+            return result.scalar_one_or_none()
+
+    @staticmethod
+    async def get_one_by_name(
+        name: str,
+        chat_id: int,
+        current_session: AsyncSession | None = None,
+        only_active=True,
+    ) -> TriggerEvent | None:
+        """Get a TriggerEvent filtered by name and chat_id.
+
+        :param name: The name of the TriggerEvent to filter.
+        :param chat_id: The chat ID to filter by.
+        :param current_session: The current session to execute the query, or None to create a new session.
+        :param only_active: If True, only active TriggerEvents will be considered (default is True).
+        :return: The TriggerEvent that matches the filter criteria, or None if not found.
+        """
+        query = select(TriggerEvent).filter_by(name=name, chat_id=chat_id)
+        if only_active:
+            query.filter_by(is_active=True)
+        if current_session:
+            result = await current_session.execute(query)
+        else:
+            async with session_factory() as session:
+                result = await session.execute(query)
+        return result.scalar_one_or_none()
+
+    @classmethod
+    async def update_or_add_by_name(
+        cls,
+        name: str,
+        chat_id: int,
+        event: str,
+        match_type: MatchTypeEnum,
+    ) -> TriggerEvent:
+        """Update or create a TriggerEvent record by name.
+
+        :param name: The name of the TriggerEvent to update or create.
+        :param chat_id: The chat ID associated with the TriggerEvent.
+        :param event: The event string.
+        :param match_type: The match type of the TriggerEvent.
+        :return: The updated or newly created TriggerEvent.
+        """
+        async with session_factory() as session:
+            record = await cls.get_one_by_name(
+                name=name,
+                chat_id=chat_id,
+                current_session=session,
+                only_active=False,
+            )
+            if record:
+                record.event = event
+                record.match_type = match_type
+            else:
+                record = TriggerEvent(
+                    name=name,
+                    event=event,
+                    match_type=match_type,
+                    chat_id=chat_id,
+                )
+                session.add(record)
+            await session.commit()
+        return record
+
+    @staticmethod
+    async def delete_by_name(name: str, chat_id: int) -> bool:
+        """Delete a TriggerEvent record by name and chat_id.
+
+        :param name: The name of the TriggerEvent to delete.
+        :param chat_id: The chat ID to filter by.
+        :return: True if the record was deleted successfully, False otherwise.
+        """
+        async with session_factory() as session:
+            query = delete(TriggerEvent).filter_by(name=name, chat_id=chat_id)
+            result = await session.execute(query)
+            await session.commit()
+        return bool(result.rowcount)
 
 
 class TriggerEventService:
     @staticmethod
-    async def detect_triggers(text: str, chat_id: int) -> Trigger | None:
+    async def detect_triggers(text: str, chat_id: int) -> bool:
         try:
-            async with session_factory() as session:
-                query = select(Trigger).filter_by(is_active=True, chat_id=chat_id)
-                result = await session.execute(query)
-                records = result.scalars().all()
-            if records:
-                records_in_text = filter(
-                    lambda record: (
-                        (
-                            record.match_type == MatchTypeEnum.text
-                            and record.trigger in text
-                        )
-                        or findall(record.trigger, text.lower())
-                    ),
-                    records,
-                )
-                return next(records_in_text, None)
-            else:
-                return None
+            record = await TriggerEventORM.search_trigger_in_text(text, chat_id)
+            return bool(record)
         except Exception as e:
             LOGGER.exception(e)
-            return None
+            return False
 
     @staticmethod
     async def put_trigger_event(text: str, chat_id: int) -> str:
         try:
             command_data: list = findall(
-                r"\S+\s+(\S+)\s+(.+[^\sregex])\s*(regex$)?", text
+                r"\S+\s+(\S+)\s+(.+[^\sregex])\s*(regex$)?",
+                text,
             )
             if command_data:
-                name, trigger, is_regex = command_data[0]
-                match_type = MatchTypeEnum.regex if is_regex else MatchTypeEnum.text
+                name, event, is_regex = command_data[0]
+                match_type = (
+                    MatchTypeEnum.regex if is_regex else MatchTypeEnum.text
+                )  # TODO delete
             else:
-                raise InvalidCommandError(
-                    example='`/triggers_put <name> <trigger> <"regex" if regex_mode>`'
-                )
-
-            async with session_factory() as session:
-                query = select(Trigger).filter_by(trigger=trigger, chat_id=chat_id)
-                result = await session.execute(query)
-                instance = result.scalar_one_or_none()
-                if instance:
-                    instance.trigger = trigger
-                    instance.match_type = match_type
-
-                else:
-                    instance = Trigger(
-                        name=name,
-                        trigger=trigger,
-                        match_type=match_type,
-                        chat_id=chat_id,
-                    )
-                    session.add(instance)
-                await session.commit()
-            return f"sucessfully updated name: {name} trigger: {trigger}"
+                example = '<code>/put_trigger_event <name> <trigger> <"regex" if regex_mode></code>'
+                raise InvalidCommandError(example=example)
+            await TriggerEventORM.update_or_add_by_name(
+                name=name,
+                chat_id=chat_id,
+                event=event,
+                match_type=match_type,
+            )
+            return f"☑️put: <code>{name}</code> = <code>{event}</code>"
         except InvalidCommandError as e:
             return str(e)
         except Exception as e:
@@ -85,60 +159,105 @@ class TriggerEventService:
         try:
             command_data = text.lower().split()
             if len(command_data) < 2:
-                raise InvalidCommandError(example="delete_trigger trigger")
+                example = "delete_trigger_event trigger"
+                raise InvalidCommandError(example=example)
             else:
-                trigger_name = command_data[1]
-            async with session_factory() as session:
-                query = delete(Trigger).filter_by(
-                    trigger_name=trigger_name, chat_id=chat_id
-                )
-                result = await session.execute(query)
-                await session.commit()
-            if result.rowcount:
-                response = f"{trigger_name} trigger successfully delete."
+                name = command_data[1]
+            result = await TriggerEventORM.delete_by_name(name, chat_id)
+            if result:
+                return f"☑️delete: <code>{name}</code>"
             else:
-                response = f"{trigger_name} not found."
-            return response
+                raise RecordsNotFound(f"❌not found: <code>{name}</code>")
         except InvalidCommandError as e:
+            return str(e)
+        except RecordsNotFound as e:
             return str(e)
         except Exception as e:
             LOGGER.exception(e)
             return SERVER_ERROR
 
 
-class TriggerAnswerORM:
-    pass  # TODO
-
-
-class TriggerAnswerService:
+class TriggerORM:
     @staticmethod
-    async def get_answer(text: str, chat_id: int) -> TriggerAnswer | str:
-        trigger = await TriggerEventService.detect_triggers(text=text, chat_id=chat_id)
-        random_answer_query = (
-            select(TriggerAnswer)
-            .filter_by(is_active=True, trigger_id=trigger.id)
+    async def get_random_active_trigger(
+        trigger_event_id: int,
+    ) -> Trigger | None:
+        random_trigger_query = (
+            select(Trigger)
+            .filter_by(
+                is_active=True,
+                trigger_event_id=trigger_event_id,
+            )
             .order_by(func.random())
             .limit(1)
         )
-        try:
-            async with session_factory() as session:
-                result = await session.execute(random_answer_query)
+        async with session_factory() as session:
+            result = await session.execute(random_trigger_query)
+            record = result.scalar_one_or_none()
+            if not record:
+                query = (
+                    update(Trigger)
+                    .filter_by(trigger_event_id=trigger_event_id)
+                    .values(is_active=True)
+                )
+                await session.execute(query)
+                result = await session.execute(random_trigger_query)
                 record = result.scalar_one_or_none()
-                if not record:
-                    query = (
-                        update(TriggerAnswer)
-                        .filter_by(trigger_id=trigger.id)
-                        .values(is_active=True)
-                    )
-                    await session.execute(query)
-                    result = await session.execute(random_answer_query)
-                    record = result.scalar_one_or_none()
-                if record:
-                    record.is_active = False
-                    await session.commit()
-                    return record
-                else:
-                    raise RecordsNotFound
+            if record:
+                record.is_active = False
+                await session.commit()
+        return record
+
+    @classmethod
+    async def update_or_add_by_id(
+        cls,
+        trigger_event_name: str,
+        chat_id: int,
+        media_type: MediaTypeEnum,
+        media: str,
+        trigger_id: int | None = None,
+    ) -> Trigger:
+        """Update or create a TriggerEvent record by name.
+
+        :param name: The name of the TriggerEvent to update or create.
+        :param chat_id: The chat ID associated with the TriggerEvent.
+        :param event: The event string.
+        :param match_type: The match type of the TriggerEvent.
+        :return: The updated or newly created TriggerEvent.
+        """
+        async with session_factory() as session:
+            trigger_event_record = await TriggerEventORM.get_one_by_name(
+                name=trigger_event_name,
+                chat_id=chat_id,
+                current_session=session,
+                only_active=False,
+            )
+            if trigger_id:
+                trigger_record = await session.get(Trigger, trigger_id)
+                raise NotImplementedError  # TODO
+            else:
+                trigger_record = Trigger(
+                    media_type=media_type,
+                    media=media,
+                    trigger_event_id=trigger_event_record.id,
+                )
+                session.add(trigger_record)
+            await session.commit()
+        return trigger_record
+
+
+class TriggerService:
+    @staticmethod
+    async def get_trigger(text: str, chat_id: int) -> Trigger | str:
+        try:
+            trigger_event = await TriggerEventORM.search_trigger_in_text(text, chat_id)
+            trigger = await TriggerORM.get_random_active_trigger(trigger_event.id)
+            if trigger:
+                return trigger
+            else:
+                raise RecordsNotFound(
+                    f"❌not found triggers for event <code>/{trigger_event.name}/</code>"
+                )
         except RecordsNotFound as e:
             msg = str(e)
             LOGGER.warning(msg)
@@ -147,29 +266,50 @@ class TriggerAnswerService:
             LOGGER.exception(e)
             return SERVER_ERROR
 
-    @classmethod
-    async def put_answer(
-        cls, trigger_name: str, chat_id: int, media_type: MediaTypeEnum, media: str
+    @staticmethod
+    async def wait_put_trigger(text: str, chat_id: int) -> TriggerEvent | str:
+        try:
+            command_data = text.split()
+            if len(command_data) < 2:
+                raise InvalidCommandError(example="<code>/put_trigger [trigger]</code>")
+            else:
+                trigger_event_name = command_data[1]
+                trigger_event_record = await TriggerEventORM.get_one_by_name(
+                    name=trigger_event_name,
+                    chat_id=chat_id,
+                    only_active=False,
+                )
+                if trigger_event_record:
+                    return trigger_event_record
+                else:
+                    raise RecordsNotFound(
+                        f"❌not found event: /<code>{trigger_event_name}<code>/"
+                    )
+        except InvalidCommandError as e:
+            return str(e)
+        except RecordsNotFound as e:
+            return str(e)
+        except Exception as e:
+            LOGGER.exception(e)
+            return SERVER_ERROR
+
+    @staticmethod
+    async def put_trigger(
+        chat_id: int,
+        media_type: MediaTypeEnum,
+        media: str,
+        state_data: dict,
     ) -> str:
         try:
-            async with session_factory() as session:
-                trigger_instance = await cls._get_trigger_by_name(
-                    session=session, name=trigger_name, chat_id=chat_id
-                )
-                if not trigger_instance:
-                    raise RecordsNotFound(
-                        message=f'No records were found matching the value "{trigger_name}"'
-                    )
-                else:
-                    answer_instance = TriggerAnswer(
-                        media_type=media_type,
-                        answer=media,
-                        trigger_id=trigger_instance.id,
-                    )
-                    session.add(answer_instance)
-                await session.commit()
-                text = "☑️put:\n" + f"#{answer_instance.id} `{answer_instance.answer}`"
-                return text
+            trigger_event_name = state_data["trigger_event_name"]
+            trigger = await TriggerORM.update_or_add_by_id(
+                trigger_event_name=trigger_event_name,
+                chat_id=chat_id,
+                media_type=media_type,
+                media=media,
+            )
+            text = f"☑️put {trigger_event_name}:\n<code>{trigger.media}</code>"
+            return text
         except RecordsNotFound as e:
             msg = str(e)
             LOGGER.warning(msg)
@@ -189,7 +329,7 @@ class TriggerAnswerService:
                 )
                 query = (
                     select(func.count())
-                    .select_from(TriggerAnswer)
+                    .select_from(Trigger)
                     .filter_by(trigger_id=trigger_instance.id, media_type=media_type)
                 )
                 result = await session.execute(query)
@@ -206,14 +346,14 @@ class TriggerAnswerService:
         media_type: MediaTypeEnum,
         offset: int,
         items_per_page: int,
-    ) -> Sequence[TriggerAnswer] | str:
+    ) -> Sequence[Trigger] | str:
         try:
             async with session_factory() as session:
                 trigger_instance = await cls._get_trigger_by_name(
                     session=session, name=trigger_name, chat_id=chat_id
                 )
                 query = (
-                    select(TriggerAnswer)
+                    select(Trigger)
                     .filter_by(media_type=media_type, trigger_id=trigger_instance.id)
                     .limit(items_per_page)
                     .offset(offset)  # page (1-1) * 5 = offset 0
@@ -227,7 +367,7 @@ class TriggerAnswerService:
     @classmethod
     async def _get_trigger_by_name(
         cls, session: AsyncSession, name: str, chat_id: int
-    ) -> Trigger | None:
-        query = select(Trigger).filter_by(name=name, chat_id=chat_id)
+    ) -> TriggerEvent | None:
+        query = select(TriggerEvent).filter_by(name=name, chat_id=chat_id)
         result = await session.execute(query)
         return result.scalar_one_or_none()
