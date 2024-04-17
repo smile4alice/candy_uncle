@@ -5,14 +5,18 @@ from aiogram.fsm.state import default_state
 from aiogram.types import CallbackQuery, Message
 
 from src.enums import MediaTypeEnum
-from src.exceptions import InvalidCommandError
-from src.filters.callback_data.rect_callback import CancelTriggerCallback
+from src.filters.callback_data.rect_callback import (
+    AnotherOneTriggerCallback,
+    CancelStateCallback,
+)
 from src.filters.triggers import IsTrigger
 from src.fsm_states.rect_states import FSMRect
 from src.keyboards.triggers import (
-    get_cancel_state_keyboard,
+    get_another_one_trigger_keyboards,
+    get_cancel_state_keyboards,
     get_trigger_keyboards,
 )
+from src.models.trigger_events import Trigger, TriggerEvent
 from src.services.triggers import TriggerEventService, TriggerService
 
 
@@ -36,31 +40,38 @@ async def process_delete_trigger_event(message: Message):
 
 
 # UPDATE ANSWER
-@triggers_router.message(
-    Command(commands=["put_trigger"]),
-    StateFilter(default_state),
-)
-async def process_put_trigger(message: Message, state: FSMContext):
-    result = await TriggerService.wait_put_trigger(message.text, message.chat.id)  # type: ignore
-    if isinstance(result, str):
-        await message.answer(text=result)
+@triggers_router.callback_query(AnotherOneTriggerCallback.filter())
+@triggers_router.message(Command(commands=["put_trigger"]), StateFilter(default_state))
+async def process_put_trigger(
+    message: Message | CallbackQuery,
+    state: FSMContext,
+    callback_data: AnotherOneTriggerCallback | None = None,
+):
+    if isinstance(message, CallbackQuery):
+        text = f"/put_trigger {callback_data.trigger_event}"
+        msg = message.message
+        await msg.delete_reply_markup()
     else:
-        markup = get_cancel_state_keyboard(
-            message_id=message.message_id,
-            chat_id=message.chat.id,
+        text = message.text  # type: ignore
+
+    result = await TriggerService.get_trigger_event_from_command(text, msg.chat.id)  # type: ignore
+    if isinstance(result, TriggerEvent):
+        markup = get_cancel_state_keyboards(
+            bot_message_id=msg.message_id,
         )
-        old_bot_message = await message.answer(
-            text=f"Waiting response for trigger /<code>{result.name}</code>/",
+        old_bot_message = await msg.answer(
+            text=f"Waiting media for <code>{result.name}</code>",
             reply_markup=markup,
         )
         await state.set_state(FSMRect.wait_put_answer)
         await state.set_data(
             {
-                "user_put_trigger_msg_id": message.message_id,
                 "bot_put_trigger_msg_id": old_bot_message.message_id,
-                "trigger_event_name": result.name,
+                "trigger_event": result.name,
             }
         )
+    else:
+        await msg.answer(text=result)
 
 
 @triggers_router.message(StateFilter(FSMRect.wait_put_answer))
@@ -68,6 +79,7 @@ async def process_put_trigger_fsm(message: Message, state: FSMContext):
     state_data = await state.get_data()
     media = None
     media_type = MediaTypeEnum(message.content_type.value)  # type: ignore
+    markup = get_another_one_trigger_keyboards(state_data["trigger_event"])
 
     if media_type == MediaTypeEnum.TEXT:
         media = message.text
@@ -87,29 +99,23 @@ async def process_put_trigger_fsm(message: Message, state: FSMContext):
             chat_id=message.chat.id,
             message_id=state_data["bot_put_trigger_msg_id"],
         )
-        await message.bot.delete_message(
-            chat_id=message.chat.id,
-            message_id=state_data["user_put_trigger_msg_id"],
-        )
         await state.set_state()
     else:
         text = f"<code>{media_type}</code> is not a supported type for triggers. Try again."
-    await message.reply(text=text)
+    await message.reply(text=text, reply_markup=markup)
 
 
 @triggers_router.message(Command("trigger"), StateFilter(default_state))
-async def process_trigger_list(message: Message):
-    command_data = message.text.split()
-    try:
-        if len(command_data) < 2:
-            raise InvalidCommandError(example="<code>/trigger <trigger_name></code>")
-        else:
-            trigger_name = command_data[1]
-            keyboards = get_trigger_keyboards(trigger_name)
-            text = f"Select media type for trigger /<code>{trigger_name}<code>/"
-            await message.answer(text=text, reply_markup=keyboards)
-    except InvalidCommandError as e:
-        await message.answer(text=str(e))
+async def process_trigger_inline_list(message: Message):
+    result = await TriggerService.get_trigger_event_from_command(
+        message.text, chat_id=message.chat.id  # type: ignore
+    )
+    if isinstance(result, TriggerEvent):
+        keyboards = get_trigger_keyboards(result.name)
+        text = f"Select media type for trigger <code>{result.name}<code>"
+        await message.answer(text=text, reply_markup=keyboards)
+    else:
+        await message.answer(text=result)
 
 
 @triggers_router.message(F.text, StateFilter(default_state), IsTrigger())
@@ -117,28 +123,30 @@ async def process_trigger(message: Message):
     result = await TriggerService.get_trigger(
         text=message.text, chat_id=message.chat.id  # type: ignore
     )
-    if isinstance(result, str):
-        await message.answer(text=result)
-    else:
+    if isinstance(result, Trigger):
         if result.media_type == MediaTypeEnum.TEXT:
             await message.reply(text=result.media)
         elif result.media_type == MediaTypeEnum.ANIMATION:
             await message.reply_animation(animation=result.media)
         elif result.media_type == MediaTypeEnum.STICKER:
             await message.reply_sticker(sticker=result.media)
+    else:
+        await message.answer(text=result)
 
 
-@triggers_router.callback_query(CancelTriggerCallback.filter(F.user_message_id))
+@triggers_router.callback_query(
+    CancelStateCallback.filter(F.bot_message_id)
+)  # TODO usermsgid not found
 async def cancel_put_trigger(
     callback_query: CallbackQuery,
-    callback_data: CancelTriggerCallback,
+    callback_data: CancelStateCallback,
     state: FSMContext,
 ):
-    await callback_query.message.delete()
     await callback_query.bot.delete_message(
-        chat_id=callback_data.chat_id,
-        message_id=callback_data.user_message_id,
+        chat_id=callback_query.message.chat.id,
+        message_id=callback_data.bot_message_id,
     )
+    await callback_query.message.delete()
     await state.set_state()
 
 

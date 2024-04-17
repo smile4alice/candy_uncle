@@ -19,7 +19,7 @@ async def test_put_command(start_command_text: str):
     message_mock = AsyncMock(text=text_mock)
     await process_put_command(message=message_mock)
     message_mock.reply.assert_called_with(
-        text=f"☑️put:\n<code>start</code> = <code>{start_command_text}</code>"
+        text=f"☑️put <code>start</code>: <code>{start_command_text}</code>"
     )
 
 

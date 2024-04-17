@@ -4,7 +4,7 @@ from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database import Base
-from src.enums import MatchTypeEnum, MediaTypeEnum
+from src.enums import MatchModeEnum, MediaTypeEnum
 
 
 class TriggerEvent(Base):
@@ -12,7 +12,7 @@ class TriggerEvent(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     is_active: Mapped[bool] = mapped_column(default=True)
-    match_type: Mapped[MatchTypeEnum] = mapped_column(default=MatchTypeEnum.text)
+    match_type: Mapped[MatchModeEnum] = mapped_column(default=MatchModeEnum.text)
     name: Mapped[str] = mapped_column(String(length=100))
     event: Mapped[str] = mapped_column(String(length=4096))
     chat_id: Mapped[int]

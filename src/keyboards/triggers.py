@@ -1,21 +1,21 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from src.filters.callback_data.rect_callback import (
-    CancelTriggerCallback,
+    AnotherOneTriggerCallback,
+    CancelStateCallback,
     DeleteTriggerCallback,
 )
 
 
-def get_cancel_state_keyboard(message_id: int, chat_id: int) -> InlineKeyboardMarkup:
+def get_cancel_state_keyboards(bot_message_id: int) -> InlineKeyboardMarkup:
     cancel_button = InlineKeyboardButton(
         text="✖️cancel",
-        callback_data=CancelTriggerCallback(
-            user_message_id=message_id,
-            chat_id=chat_id,
+        callback_data=CancelStateCallback(
+            bot_message_id=bot_message_id,
         ).pack(),
     )
-    keyboard = InlineKeyboardMarkup(row_width=5, inline_keyboard=[[cancel_button]])
-    return keyboard
+    keyboards = InlineKeyboardMarkup(row_width=5, inline_keyboard=[[cancel_button]])
+    return keyboards
 
 
 def get_trigger_keyboards(
@@ -44,20 +44,26 @@ def get_trigger_keyboards(
 
 
 def get_manage_answer_keyboards(
-    trigger_name: str,
-    answer_id: int,
-    edit_data: str | None = None,
+    trigger_event: str,
+    trigger_id: int,
 ) -> InlineKeyboardMarkup:
     delete_button = InlineKeyboardButton(
-        text=f"❌delete_trigger_{trigger_name}_{answer_id}",
-        callback_data=DeleteTriggerCallback(rect_id=answer_id).pack(),
+        text=f"❌delete_trigger_{trigger_event}_{trigger_id}",
+        callback_data=DeleteTriggerCallback(rect_id=trigger_id).pack(),
     )
     list_of_button = [delete_button]
-    if edit_data:
-        edit_button = InlineKeyboardButton(
-            text="✏️edit_trigger",
-            switch_inline_query_current_chat=f"#edit_trigger_{trigger_name}_text_{answer_id}\n{edit_data}",
-        )
-        list_of_button.append(edit_button)
+    keyboards = InlineKeyboardMarkup(inline_keyboard=[list_of_button])
+    return keyboards
+
+
+def get_another_one_trigger_keyboards(
+    trigger_event: str,
+) -> InlineKeyboardMarkup:
+    callback_data = AnotherOneTriggerCallback(trigger_event=trigger_event).pack()
+    another_button = InlineKeyboardButton(
+        text="🔄another one",
+        callback_data=callback_data,
+    )
+    list_of_button = [another_button]
     keyboards = InlineKeyboardMarkup(inline_keyboard=[list_of_button])
     return keyboards

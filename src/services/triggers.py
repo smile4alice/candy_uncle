@@ -5,7 +5,7 @@ from sqlalchemy import and_, delete, func, literal, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import session_factory
-from src.enums import MatchTypeEnum, MediaTypeEnum
+from src.enums import MatchModeEnum, MediaTypeEnum
 from src.exceptions import InvalidCommandError, RecordsNotFound
 from src.lib import SERVER_ERROR
 from src.logging import LOGGER
@@ -16,8 +16,8 @@ class TriggerEventORM:
     """Methods of interacting with the database using SQLAlchemy"""
 
     @staticmethod
-    async def search_trigger_in_text(text: str, chat_id: int) -> TriggerEvent | None:
-        """Search for a TriggerEvent in the database based on text and chat_id.
+    async def search_triggers_in_text(text: str, chat_id: int) -> TriggerEvent | None:
+        """Search for a TriggerEvent in the database based on text.
 
         :param text: The text to search for.
         :param chat_id: The chat ID to filter by.
@@ -27,11 +27,11 @@ class TriggerEventORM:
             query = select(TriggerEvent).filter_by(is_active=True, chat_id=chat_id)
             search_condition = or_(
                 and_(
-                    TriggerEvent.match_type == MatchTypeEnum.text,
+                    TriggerEvent.match_type == MatchModeEnum.text,
                     literal(text).icontains(TriggerEvent.event),
                 ),
                 and_(
-                    TriggerEvent.match_type == MatchTypeEnum.regex,
+                    TriggerEvent.match_type == MatchModeEnum.regex,
                     literal(text).op("~*")(TriggerEvent.event),
                 ),
             )
@@ -65,12 +65,12 @@ class TriggerEventORM:
         return result.scalar_one_or_none()
 
     @classmethod
-    async def update_or_add_by_name(
+    async def update_by_name_or_create(
         cls,
         name: str,
         chat_id: int,
         event: str,
-        match_type: MatchTypeEnum,
+        match_type: MatchModeEnum,
     ) -> TriggerEvent:
         """Update or create a TriggerEvent record by name.
 
@@ -120,7 +120,7 @@ class TriggerEventService:
     @staticmethod
     async def detect_triggers(text: str, chat_id: int) -> bool:
         try:
-            record = await TriggerEventORM.search_trigger_in_text(text, chat_id)
+            record = await TriggerEventORM.search_triggers_in_text(text, chat_id)
             return bool(record)
         except Exception as e:
             LOGGER.exception(e)
@@ -129,25 +129,20 @@ class TriggerEventService:
     @staticmethod
     async def put_trigger_event(text: str, chat_id: int) -> str:
         try:
-            command_data: list = findall(
-                r"\S+\s+(\S+)\s+(.+[^\sregex])\s*(regex$)?",
-                text,
-            )
+            command_data = findall(r"\S+\s+(\S+)\s+(.+[^\sregex])\s*(regex$)?", text)
             if command_data:
                 name, event, is_regex = command_data[0]
-                match_type = (
-                    MatchTypeEnum.regex if is_regex else MatchTypeEnum.text
-                )  # TODO delete
+                match_type = MatchModeEnum.regex if is_regex else MatchModeEnum.text
             else:
-                example = '<code>/put_trigger_event <name> <trigger> <"regex" if regex_mode></code>'
+                example = '<code>/put_trigger_event [name] [trigger] ["regex" if regex_mode]</code>'
                 raise InvalidCommandError(example=example)
-            await TriggerEventORM.update_or_add_by_name(
+            await TriggerEventORM.update_by_name_or_create(
                 name=name,
                 chat_id=chat_id,
                 event=event,
                 match_type=match_type,
             )
-            return f"☑️put: <code>{name}</code> = <code>{event}</code>"
+            return f"☑️put <code>{name}</code>: <code>{event}</code>"
         except InvalidCommandError as e:
             return str(e)
         except Exception as e:
@@ -178,8 +173,10 @@ class TriggerEventService:
 
 
 class TriggerORM:
+    """Methods of interacting with the database using SQLAlchemy"""
+
     @staticmethod
-    async def get_random_active_trigger(
+    async def get_random_active_by_event_id(
         trigger_event_id: int,
     ) -> Trigger | None:
         random_trigger_query = (
@@ -208,14 +205,12 @@ class TriggerORM:
                 await session.commit()
         return record
 
-    @classmethod
-    async def update_or_add_by_id(
-        cls,
-        trigger_event_name: str,
+    @staticmethod
+    async def update_by_id_or_create(
+        trigger_event: str,
         chat_id: int,
         media_type: MediaTypeEnum,
         media: str,
-        trigger_id: int | None = None,
     ) -> Trigger:
         """Update or create a TriggerEvent record by name.
 
@@ -227,21 +222,18 @@ class TriggerORM:
         """
         async with session_factory() as session:
             trigger_event_record = await TriggerEventORM.get_one_by_name(
-                name=trigger_event_name,
+                name=trigger_event,
                 chat_id=chat_id,
                 current_session=session,
                 only_active=False,
             )
-            if trigger_id:
-                trigger_record = await session.get(Trigger, trigger_id)
-                raise NotImplementedError  # TODO
-            else:
-                trigger_record = Trigger(
-                    media_type=media_type,
-                    media=media,
-                    trigger_event_id=trigger_event_record.id,
-                )
-                session.add(trigger_record)
+            # TODO search by media and trigger id for unique
+            trigger_record = Trigger(
+                media_type=media_type,
+                media=media,
+                trigger_event_id=trigger_event_record.id,
+            )
+            session.add(trigger_record)
             await session.commit()
         return trigger_record
 
@@ -250,13 +242,13 @@ class TriggerService:
     @staticmethod
     async def get_trigger(text: str, chat_id: int) -> Trigger | str:
         try:
-            trigger_event = await TriggerEventORM.search_trigger_in_text(text, chat_id)
-            trigger = await TriggerORM.get_random_active_trigger(trigger_event.id)
+            trigger_event = await TriggerEventORM.search_triggers_in_text(text, chat_id)
+            trigger = await TriggerORM.get_random_active_by_event_id(trigger_event.id)
             if trigger:
                 return trigger
             else:
                 raise RecordsNotFound(
-                    f"❌not found triggers for event <code>/{trigger_event.name}/</code>"
+                    f"❌not found triggers for event <code>{trigger_event.name}</code>"
                 )
         except RecordsNotFound as e:
             msg = str(e)
@@ -267,15 +259,19 @@ class TriggerService:
             return SERVER_ERROR
 
     @staticmethod
-    async def wait_put_trigger(text: str, chat_id: int) -> TriggerEvent | str:
+    async def get_trigger_event_from_command(
+        text: str, chat_id: int
+    ) -> TriggerEvent | str:
         try:
             command_data = text.split()
             if len(command_data) < 2:
-                raise InvalidCommandError(example="<code>/put_trigger [trigger]</code>")
+                raise InvalidCommandError(
+                    example="<code>/command [trigger_event]</code>"
+                )
             else:
-                trigger_event_name = command_data[1]
+                trigger_event = command_data[1]
                 trigger_event_record = await TriggerEventORM.get_one_by_name(
-                    name=trigger_event_name,
+                    name=trigger_event,
                     chat_id=chat_id,
                     only_active=False,
                 )
@@ -283,7 +279,7 @@ class TriggerService:
                     return trigger_event_record
                 else:
                     raise RecordsNotFound(
-                        f"❌not found event: /<code>{trigger_event_name}<code>/"
+                        f"❌not found event: <code>{trigger_event}<code>"
                     )
         except InvalidCommandError as e:
             return str(e)
@@ -301,14 +297,14 @@ class TriggerService:
         state_data: dict,
     ) -> str:
         try:
-            trigger_event_name = state_data["trigger_event_name"]
-            trigger = await TriggerORM.update_or_add_by_id(
-                trigger_event_name=trigger_event_name,
+            trigger_event = state_data["trigger_event"]
+            await TriggerORM.update_by_id_or_create(
+                trigger_event=trigger_event,
                 chat_id=chat_id,
                 media_type=media_type,
                 media=media,
             )
-            text = f"☑️put {trigger_event_name}:\n<code>{trigger.media}</code>"
+            text = f"☑️put <code>{trigger_event}</code>"
             return text
         except RecordsNotFound as e:
             msg = str(e)

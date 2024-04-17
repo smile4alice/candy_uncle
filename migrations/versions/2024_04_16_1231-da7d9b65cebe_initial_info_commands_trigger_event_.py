@@ -35,7 +35,7 @@ def upgrade() -> None:
         sa.Column("is_active", sa.Boolean(), nullable=False),
         sa.Column(
             "match_type",
-            sa.Enum("text", "regex", name="matchtypeenum"),
+            sa.Enum("text", "regex", name="matchmodeenum"),
             nullable=False,
         ),
         sa.Column("name", sa.String(length=100), nullable=False),

@@ -131,9 +131,7 @@ class InfoCommandService:
                 command_name = command_data[1]
                 command_info = " ".join(command_data[2:])
                 await InfoCommandORM.update_or_add_by_name(command_name, command_info)
-                return (
-                    f"☑️put:\n<code>{command_name}</code> = <code>{command_info}</code>"
-                )
+                return f"☑️put <code>{command_name}</code>: <code>{command_info}</code>"
         except InvalidCommandError as e:
             return str(e)
         except Exception as e:
