@@ -5,19 +5,17 @@ from aiogram.fsm.state import default_state
 from aiogram.types import CallbackQuery, Message
 
 from src.enums import MediaTypeEnum
-from src.filters.callback_data.rect_callback import (
-    AnotherOneTriggerCallback,
-    CancelStateCallback,
-)
-from src.filters.triggers import IsTrigger
-from src.fsm_states.rect_states import FSMRect
-from src.keyboards.triggers import (
+
+from .filters.callback import AnotherOneTriggerCallback, CancelStateCallback
+from .filters.fsm_states import FSMRect
+from .filters.message import IsTrigger
+from .keyboards import (
     get_another_one_trigger_keyboards,
     get_cancel_state_keyboards,
     get_trigger_keyboards,
 )
-from src.models.trigger_events import Trigger, TriggerEvent
-from src.services.triggers import TriggerEventService, TriggerService
+from .models import Trigger, TriggerEvent
+from .services import TriggerEventService, TriggerService
 
 
 triggers_router: Router = Router()
@@ -39,27 +37,27 @@ async def process_delete_trigger_event(message: Message):
     await message.reply(text=res)
 
 
-# UPDATE ANSWER
 @triggers_router.callback_query(AnotherOneTriggerCallback.filter())
 @triggers_router.message(Command(commands=["put_trigger"]), StateFilter(default_state))
 async def process_put_trigger(
-    message: Message | CallbackQuery,
+    event_object: Message | CallbackQuery,
     state: FSMContext,
     callback_data: AnotherOneTriggerCallback | None = None,
 ):
-    if isinstance(message, CallbackQuery):
+    if isinstance(event_object, CallbackQuery):
         text = f"/put_trigger {callback_data.trigger_event}"
-        msg = message.message
-        await msg.delete_reply_markup()
+        message = event_object.message
+        await message.delete_reply_markup()
     else:
+        message = event_object
         text = message.text  # type: ignore
 
-    result = await TriggerService.get_trigger_event_from_command(text, msg.chat.id)  # type: ignore
+    result = await TriggerService.get_trigger_event_from_command(text, message.chat.id)  # type: ignore
     if isinstance(result, TriggerEvent):
         markup = get_cancel_state_keyboards(
-            bot_message_id=msg.message_id,
+            bot_message_id=message.message_id,
         )
-        old_bot_message = await msg.answer(
+        old_bot_message = await message.answer(
             text=f"Waiting media for <code>{result.name}</code>",
             reply_markup=markup,
         )
@@ -71,7 +69,7 @@ async def process_put_trigger(
             }
         )
     else:
-        await msg.answer(text=result)
+        await message.answer(text=result)
 
 
 @triggers_router.message(StateFilter(FSMRect.wait_put_answer))

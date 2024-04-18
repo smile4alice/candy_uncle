@@ -9,7 +9,7 @@ from src.logging import LOGGER
 
 
 @dataclass
-class Roll:
+class RollResult:
     """Dataclass representing a dice digit roll."""
 
     max_digit: int | float
@@ -20,7 +20,7 @@ class Roll:
 class RollService:
     """Service class for handling dice digit rolls."""
 
-    def get_roll(self, text: str) -> Roll | str:
+    def get_roll(self, text: str) -> RollResult | str:
         """Extracts and processes a dice roll from the provided text.
 
         Args:
@@ -47,7 +47,7 @@ class RollService:
                 max_digit = max_digit if max_digit > 0.1 else 1.0  # type: ignore
                 min_digit = 1.0 if max_digit > 1.0 else 0.1  # type: ignore
                 result = round(uniform(min_digit, max_digit), 2)  # type: ignore
-            return Roll(
+            return RollResult(
                 max_digit=max_digit,
                 result=result,
                 min_digit=min_digit,
@@ -58,14 +58,14 @@ class RollService:
             LOGGER.exception(exc)
             return SERVER_ERROR
 
-    def to_text_from_user(self, from_user: User, roll: Roll | str) -> str:
+    def to_text_from_user(self, from_user: User, roll: RollResult | str) -> str:
         """Format the text with user information and roll result
 
         Example:
             John Doe roll 46(1-100)
         """
 
-        if isinstance(roll, Roll):
+        if isinstance(roll, RollResult):
             text = (
                 f'<a href="{from_user.url}">{from_user.full_name}</a>'
                 f" roll <b>{roll.result}</b> ({roll.min_digit} - {roll.max_digit})"

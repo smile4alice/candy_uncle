@@ -8,11 +8,13 @@ expressive error handling and better organization of code.
 
 from typing import Optional
 
+from src.lib import INVALID_COMMAND_ERROR, RECORDS_NOT_FOUND_ERROR
 
-class RecordsNotFound(Exception):
+
+class RecordsNotFoundError(Exception):
     """Exception raised when no records were found in the database."""
 
-    def __init__(self, message: str = "No records were found.") -> None:
+    def __init__(self, message: str = RECORDS_NOT_FOUND_ERROR) -> None:
         """
         Initialize the exception.
 
@@ -27,7 +29,7 @@ class InvalidCommandError(Exception):
 
     def __init__(
         self,
-        message: str = "Incorrect bot command entered.",
+        message: str = INVALID_COMMAND_ERROR,
         example: Optional[str] = None,
     ) -> None:
         """

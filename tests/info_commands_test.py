@@ -2,10 +2,10 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from src.handlers.info_commands import (
-    process_command,
+from src.info_commands.handlers import (
     process_delete_command,
     process_put_command,
+    process_use_command,
 )
 
 
@@ -34,7 +34,7 @@ async def test_put_command_without_text():
 async def test_start_command(start_command_text: str):
     text_mock = "/start"
     message_mock = AsyncMock(text=text_mock)
-    await process_command(message=message_mock)
+    await process_use_command(message=message_mock)
     message_mock.reply.assert_called_with(text=start_command_text)
 
 
@@ -49,7 +49,7 @@ async def test_delete_non_exist_command_():
     text_mock = "/delete_command test"
     message_mock = AsyncMock(text=text_mock)
     await process_delete_command(message=message_mock)
-    message_mock.reply.assert_called_with(text="❌not found: <code>test</code>")
+    message_mock.reply.assert_called_with(text="❌not found command: <code>test</code>")
 
 
 async def test_delete_without_command():

@@ -1,6 +1,6 @@
 from unittest.mock import AsyncMock
 
-from src.handlers.triggers import process_put_trigger_event
+from src.triggers.handlers import process_put_trigger_event
 
 
 async def test_put_trigger_event_simple():

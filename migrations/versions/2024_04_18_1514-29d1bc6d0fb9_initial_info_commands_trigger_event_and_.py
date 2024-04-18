@@ -1,8 +1,8 @@
-"""initial info_commands, trigger_event, trigger tables
+"""initial info_commands, trigger_event and trigger tables
 
-Revision ID: da7d9b65cebe
+Revision ID: 29d1bc6d0fb9
 Revises:
-Create Date: 2024-04-16 12:31:39.828555
+Create Date: 2024-04-18 15:14:07.381323
 
 """
 
@@ -13,7 +13,7 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision: str = "da7d9b65cebe"
+revision: str = "29d1bc6d0fb9"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -24,19 +24,17 @@ def upgrade() -> None:
     op.create_table(
         "info_commands",
         sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("chat_id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(length=100), nullable=False),
         sa.Column("info", sa.String(length=4096), nullable=False),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("name"),
     )
     op.create_table(
         "trigger_events",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False),
         sa.Column(
-            "match_type",
-            sa.Enum("text", "regex", name="matchmodeenum"),
-            nullable=False,
+            "match_mode", sa.Enum("text", "regex", name="matchmodeenum"), nullable=False
         ),
         sa.Column("name", sa.String(length=100), nullable=False),
         sa.Column("event", sa.String(length=4096), nullable=False),
@@ -64,8 +62,7 @@ def upgrade() -> None:
         sa.Column("media", sa.String(length=4096), nullable=False),
         sa.Column("trigger_event_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
-            ["trigger_event_id"],
-            ["trigger_events.id"],
+            ["trigger_event_id"], ["trigger_events.id"], ondelete="Cascade"
         ),
         sa.PrimaryKeyConstraint("id"),
     )

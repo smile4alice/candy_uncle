@@ -1,7 +1,7 @@
 from aiogram.filters import BaseFilter
 from aiogram.types import Message
 
-from src.services.triggers import TriggerEventService
+from ..services import TriggerEventService
 
 
 class IsTrigger(BaseFilter):

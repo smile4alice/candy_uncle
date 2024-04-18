@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from src.filters.callback_data.rect_callback import (
+from .filters.callback import (
     AnotherOneTriggerCallback,
     CancelStateCallback,
     DeleteTriggerCallback,

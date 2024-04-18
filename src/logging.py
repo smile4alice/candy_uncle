@@ -12,6 +12,7 @@ Attributes:
 import asyncio
 import logging
 from abc import ABC, abstractmethod
+from html import escape
 from typing import Coroutine
 
 from aiogram import Bot
@@ -72,7 +73,7 @@ class AiogramLogSender(BaseSender):
         return coroutine
 
     def writeLog(self, msg: str) -> None:
-        self._run_async(self.send_logs(msg=f"<code>{msg[-2000:]}</code>"))
+        self._run_async(self.send_logs(msg=f"<pre>{escape(msg[-2000:])}</pre>"))
 
 
 class SpecialHandler(logging.Handler):

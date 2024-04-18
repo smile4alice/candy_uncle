@@ -2,8 +2,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from src.handlers.user_helpers import process_roll
-from src.services.roll import RollService
+from src.roll.handlers import process_roll
+from src.roll.services import RollService
 
 
 @pytest.fixture(scope="session")

@@ -10,10 +10,11 @@ from aiogram.webhook.aiohttp_server import (
 )
 from aiohttp import web
 
-from src.config import SETTINGS, Environment
-from src.database.nosql import STORAGE
-from src.handlers import ROUTERS
+from src import ROUTERS
+from src.config import SETTINGS
+from src.enums import Environment
 from src.logging import LOGGER
+from src.storage import STORAGE
 
 
 async def on_startup(bot: Bot) -> None:
