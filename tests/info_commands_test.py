@@ -27,7 +27,7 @@ async def test_put_command_without_text():
     text_mock = "/put_command"
     message_mock = AsyncMock(text=text_mock)
     await process_put_command(message=message_mock)
-    error_msg = "Incorrect bot command entered.\nExample: <code>/put_command start Hello. I'm a beautiful bot.</code>"
+    error_msg = "Invalid bot command entered.\nExample: <code>/put_command start Hello. I'm a beautiful bot.</code>"
     message_mock.reply.assert_called_with(text=error_msg)
 
 
@@ -57,5 +57,5 @@ async def test_delete_without_command():
     message_mock = AsyncMock(text=text_mock)
     await process_delete_command(message=message_mock)
     message_mock.reply.assert_called_with(
-        text="Incorrect bot command entered.\nExample: <code>/delete_command start</code>"
+        text="Invalid bot command entered.\nExample: <code>/delete_command start</code>"
     )

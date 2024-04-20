@@ -2,7 +2,8 @@ from aiogram.filters.callback_data import CallbackData
 
 
 class CancelStateCallback(CallbackData, prefix="cancel_rect"):
-    bot_message_id: int
+    msg_id_which_run_state: int
+    delete_it: bool
 
 
 class DeleteTriggerCallback(CallbackData, prefix="delete_rect"):

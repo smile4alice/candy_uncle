@@ -54,8 +54,10 @@ async def process_put_trigger(
 
     result = await TriggerService.get_trigger_event_from_command(text, message.chat.id)  # type: ignore
     if isinstance(result, TriggerEvent):
+        delete_msg_which_run_state = message.from_user.is_bot == False  # noqa: E712
         markup = get_cancel_state_keyboards(
-            bot_message_id=message.message_id,
+            msg_id_which_run_state=message.message_id,
+            delete_it=delete_msg_which_run_state,
         )
         old_bot_message = await message.answer(
             text=f"Waiting media for <code>{result.name}</code>",
@@ -132,18 +134,17 @@ async def process_trigger(message: Message):
         await message.answer(text=result)
 
 
-@triggers_router.callback_query(
-    CancelStateCallback.filter(F.bot_message_id)
-)  # TODO usermsgid not found
+@triggers_router.callback_query(CancelStateCallback.filter(F.msg_id_which_run_state))
 async def cancel_put_trigger(
     callback_query: CallbackQuery,
     callback_data: CancelStateCallback,
     state: FSMContext,
 ):
-    await callback_query.bot.delete_message(
-        chat_id=callback_query.message.chat.id,
-        message_id=callback_data.bot_message_id,
-    )
+    if callback_data.delete_it:
+        await callback_query.bot.delete_message(
+            chat_id=callback_query.message.chat.id,
+            message_id=callback_data.msg_id_which_run_state,
+        )
     await callback_query.message.delete()
     await state.set_state()
 

@@ -7,11 +7,13 @@ from .filters.callback import (
 )
 
 
-def get_cancel_state_keyboards(bot_message_id: int) -> InlineKeyboardMarkup:
+def get_cancel_state_keyboards(
+    msg_id_which_run_state: int, delete_it: bool = True
+) -> InlineKeyboardMarkup:
     cancel_button = InlineKeyboardButton(
         text="✖️cancel",
         callback_data=CancelStateCallback(
-            bot_message_id=bot_message_id,
+            msg_id_which_run_state=msg_id_which_run_state, delete_it=delete_it
         ).pack(),
     )
     keyboards = InlineKeyboardMarkup(row_width=5, inline_keyboard=[[cancel_button]])
