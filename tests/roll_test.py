@@ -2,8 +2,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from src.handlers.user_helpers import process_roll
-from src.services.roll import RollService
+from src.roll.handlers import process_roll
+from src.roll.services import RollService
 
 
 @pytest.fixture(scope="session")
@@ -15,15 +15,43 @@ def roll_service():
 def roll_text_cases():
     cases = {
         "INTEGER": [
-            {"case": "/roll 0 lorem", "max_digit": 100, "min_digit": 1},
-            {"case": "/roll 200lorem", "max_digit": 200, "min_digit": 1},
-            {"case": "/ролл 244 lorem 245", "max_digit": 244, "min_digit": 1},
+            {
+                "case": "/roll 0 lorem",
+                "max_digit": 100,
+                "min_digit": 1,
+            },
+            {
+                "case": "/roll 200lorem",
+                "max_digit": 200,
+                "min_digit": 1,
+            },
+            {
+                "case": "/ролл 244 lorem 245",
+                "max_digit": 244,
+                "min_digit": 1,
+            },
         ],
         "FLOAT": [
-            {"case": "/roll 0.5 lorem", "max_digit": 0.5, "min_digit": 0.1},
-            {"case": "/roll 25.50 lorem", "max_digit": 25.50, "min_digit": 1},
-            {"case": "/roll 1lorem", "max_digit": 1.0, "min_digit": 0.1},
-            {"case": "/ролл 0,0 lorem 245", "max_digit": 1.0, "min_digit": 0.1},
+            {
+                "case": "/roll 0.5 lorem",
+                "max_digit": 0.5,
+                "min_digit": 0.1,
+            },
+            {
+                "case": "/roll 25.50 lorem",
+                "max_digit": 25.50,
+                "min_digit": 1,
+            },
+            {
+                "case": "/roll 1lorem",
+                "max_digit": 1.0,
+                "min_digit": 0.1,
+            },
+            {
+                "case": "/ролл 0,0 lorem 245",
+                "max_digit": 1.0,
+                "min_digit": 0.1,
+            },
         ],
     }
     return cases
