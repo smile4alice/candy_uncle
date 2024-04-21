@@ -17,6 +17,6 @@ class MediaTypeEnum(Enum):
     AUDIO = "audio"
 
 
-class MatchTypeEnum(Enum):
+class MatchModeEnum(Enum):
     text = "text"
     regex = "regex"

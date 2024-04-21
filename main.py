@@ -10,10 +10,11 @@ from aiogram.webhook.aiohttp_server import (
 )
 from aiohttp import web
 
-from src.config import SETTINGS, Environment
-from src.database.nosql import STORAGE
-from src.handlers import ROUTERS
+from src import ROUTERS
+from src.config import SETTINGS
+from src.enums import Environment
 from src.logging import LOGGER
+from src.storage import STORAGE
 
 
 async def on_startup(bot: Bot) -> None:
@@ -26,14 +27,20 @@ async def on_startup(bot: Bot) -> None:
     )
 
 
-def start_web_app(dp: Dispatcher, bot: Bot, loop: asyncio.AbstractEventLoop):
+def start_web_app(
+    dp: Dispatcher,
+    bot: Bot,
+    loop: asyncio.AbstractEventLoop,
+):
     # Register startup hook to initialize webhook
     dp.startup.register(on_startup)
 
     # Create aiohttp.web.Application instance
     app = web.Application()
     webhook_requests_handler = SimpleRequestHandler(
-        dispatcher=dp, bot=bot, secret_token=SETTINGS.WEBHOOK_SECRET
+        dispatcher=dp,
+        bot=bot,
+        secret_token=SETTINGS.WEBHOOK_SECRET,
     )
 
     # Register webhook handler on application
@@ -56,7 +63,7 @@ def main(loop: asyncio.AbstractEventLoop):
 
     bot = Bot(
         token=SETTINGS.BOT_TOKEN,
-        default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN),
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
     dp = Dispatcher(storage=STORAGE)
 
