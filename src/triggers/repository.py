@@ -5,8 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import session_factory
 from src.enums import MatchModeEnum, MediaTypeEnum
-from src.lib import SERVER_ERROR
-from src.logging import LOGGER
 
 from .models import Trigger, TriggerEvent
 
@@ -149,7 +147,7 @@ class TriggerORM:
         return record
 
     @staticmethod
-    async def update_by_id_or_create(
+    async def create(
         trigger_event: str,
         chat_id: int,
         media_type: MediaTypeEnum,
@@ -170,7 +168,6 @@ class TriggerORM:
                 current_session=session,
                 only_active=False,
             )
-            # TODO search by media and trigger id for unique
             trigger_record = Trigger(
                 media_type=media_type,
                 media=media,
@@ -181,46 +178,67 @@ class TriggerORM:
         return trigger_record
 
     @staticmethod
-    async def get_count_answer_by_type(
-        trigger_name: str, chat_id: int, media_type: str
-    ) -> int | str:
-        try:
-            async with session_factory() as session:
-                trigger_instance = await TriggerEventORM.get_one_by_name(
-                    current_session=session, name=trigger_name, chat_id=chat_id
-                )
-                query = (
-                    select(func.count())
-                    .select_from(Trigger)
-                    .filter_by(trigger_id=trigger_instance.id, media_type=media_type)
-                )
-                result = await session.execute(query)
-                return result.scalar_one()
-        except Exception as e:
-            LOGGER.exception(e)
-            return SERVER_ERROR
+    def _get_next_offset(
+        items_per_page,
+        total_items,
+        offset,
+    ):
+        next_offset = items_per_page + int(offset) if offset else items_per_page
+        return str(next_offset) if next_offset < total_items else None
 
     @staticmethod
-    async def get_answer_with_pagination(
-        trigger_name: str,
+    async def _get_total_items_by_type(
+        trigger_event_id: int,
+        media_type: MediaTypeEnum,
+        session: AsyncSession,
+    ) -> int:
+        query = (
+            select(func.count())
+            .select_from(Trigger)
+            .filter_by(trigger_event_id=trigger_event_id, media_type=media_type)
+        )
+        result = await session.execute(query)
+        return result.scalar_one()
+
+    @classmethod
+    async def paginate_records_list(
+        cls,
+        event_name: str,
         chat_id: int,
         media_type: MediaTypeEnum,
-        offset: int,
+        offset: str,
         items_per_page: int,
-    ) -> Sequence[Trigger] | str:
-        try:
-            async with session_factory() as session:
-                trigger_instance = await TriggerEventORM.get_one_by_name(
-                    current_session=session, name=trigger_name, chat_id=chat_id
+    ) -> tuple[str | None, Sequence[Trigger]]:
+        async with session_factory() as session:
+            trigger_event_record = await TriggerEventORM.get_one_by_name(
+                current_session=session, name=event_name, chat_id=chat_id
+            )
+            total_items = await cls._get_total_items_by_type(
+                trigger_event_record.id, media_type, session
+            )
+            next_offset = cls._get_next_offset(items_per_page, total_items, offset)
+            query = (
+                select(Trigger)
+                .filter_by(
+                    media_type=media_type,
+                    trigger_event_id=trigger_event_record.id,
                 )
-                query = (
-                    select(Trigger)
-                    .filter_by(media_type=media_type, trigger_id=trigger_instance.id)
-                    .limit(items_per_page)
-                    .offset(offset)  # page (1-1) * 5 = offset 0
-                )
-                result = await session.execute(query)
-                return result.scalars().all()
-        except Exception as e:
-            LOGGER.exception(e)
-            return SERVER_ERROR
+                .limit(items_per_page)
+                .offset(next_offset)  # page (1-1) * 5 = offset 0
+            )
+            result = await session.execute(query)
+            return next_offset, result.scalars().all()
+
+    @staticmethod
+    async def delete_by_id(trigger_id: int) -> bool:
+        """Delete a TriggerEvent record by name and chat_id.
+
+        :param name (str): The name of the TriggerEvent to delete.
+        :param chat_id (int): The chat ID to filter by.
+        :return (bool): True if the record was deleted successfully, False otherwise.
+        """
+        async with session_factory() as session:
+            query = delete(Trigger).filter_by(id=trigger_id)
+            result = await session.execute(query)
+            await session.commit()
+        return bool(result.rowcount)

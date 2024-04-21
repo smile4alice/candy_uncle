@@ -7,7 +7,7 @@ class CancelStateCallback(CallbackData, prefix="cancel_rect"):
 
 
 class DeleteTriggerCallback(CallbackData, prefix="delete_rect"):
-    rect_id: int
+    trigger_id: int
 
 
 class AnotherOneTriggerCallback(CallbackData, prefix="put_trigger"):

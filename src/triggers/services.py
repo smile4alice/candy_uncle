@@ -1,4 +1,5 @@
 from re import findall
+from typing import Sequence
 
 from src.enums import MatchModeEnum, MediaTypeEnum
 from src.exceptions import InvalidCommandError, RecordsNotFoundError
@@ -122,7 +123,7 @@ class TriggerService:
     ) -> str:
         try:
             trigger_event = state_data["trigger_event"]
-            await TriggerORM.update_by_id_or_create(
+            await TriggerORM.create(
                 trigger_event=trigger_event,
                 chat_id=chat_id,
                 media_type=media_type,
@@ -134,6 +135,48 @@ class TriggerService:
             msg = str(e)
             LOGGER.warning(msg)
             return msg
+        except Exception as e:
+            LOGGER.exception(e)
+            return SERVER_ERROR
+
+    @staticmethod
+    async def get_triggers_for_inline(
+        event_name: str,
+        chat_id: int,
+        media_type: MediaTypeEnum,
+        items_per_page: int,
+        offset: str,
+    ) -> tuple[str | None, Sequence[Trigger]] | str:
+        try:
+            next_offset, records_list = await TriggerORM.paginate_records_list(
+                event_name=event_name,
+                chat_id=chat_id,
+                media_type=media_type,
+                offset=offset,
+                items_per_page=items_per_page,
+            )
+            next_offset = str(next_offset) if next_offset else None
+            return (next_offset, records_list)
+        except InvalidCommandError as e:
+            return str(e)
+        except RecordsNotFoundError as e:
+            return str(e)
+        except Exception as e:
+            LOGGER.exception(e)
+            return SERVER_ERROR
+
+    @staticmethod
+    async def delete_trigger(trigger_id: int) -> str:
+        try:
+            result = await TriggerORM.delete_by_id(trigger_id)
+            if result:
+                return f"☑️delete trigger /{trigger_id}/"
+            else:
+                raise RecordsNotFoundError
+        except InvalidCommandError as e:
+            return str(e)
+        except RecordsNotFoundError as e:
+            return str(e)
         except Exception as e:
             LOGGER.exception(e)
             return SERVER_ERROR

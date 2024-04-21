@@ -2,16 +2,29 @@ from aiogram import F, Router
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import (
+    CallbackQuery,
+    InlineQuery,
+    InlineQueryResultArticle,
+    InlineQueryResultCachedGif,
+    InlineQueryResultCachedSticker,
+    InputTextMessageContent,
+    Message,
+)
 
 from src.enums import MediaTypeEnum
 
-from .filters.callback import AnotherOneTriggerCallback, CancelStateCallback
+from .filters.callback import (
+    AnotherOneTriggerCallback,
+    CancelStateCallback,
+    DeleteTriggerCallback,
+)
 from .filters.fsm_states import FSMRect
 from .filters.message import IsTrigger
 from .keyboards import (
     get_another_one_trigger_keyboards,
     get_cancel_state_keyboards,
+    get_manage_answer_keyboards,
     get_trigger_keyboards,
 )
 from .models import Trigger, TriggerEvent
@@ -106,16 +119,91 @@ async def process_put_trigger_fsm(message: Message, state: FSMContext):
 
 
 @triggers_router.message(Command("trigger"), StateFilter(default_state))
-async def process_trigger_inline_list(message: Message):
+async def process_trigger_categories(message: Message):
     result = await TriggerService.get_trigger_event_from_command(
         message.text, chat_id=message.chat.id  # type: ignore
     )
     if isinstance(result, TriggerEvent):
-        keyboards = get_trigger_keyboards(result.name)
-        text = f"Select media type for trigger <code>{result.name}<code>"
+        keyboards = get_trigger_keyboards(result.name, chat_id=message.chat.id)
+        text = f"Select media type for trigger <code>{result.name}</code>"
         await message.answer(text=text, reply_markup=keyboards)
     else:
         await message.answer(text=result)
+
+
+@triggers_router.inline_query(
+    lambda inline_query: any(
+        i in inline_query.query for i in ["text", "animation", "sticker"]
+    )
+)
+async def process_triggers_inline_query(inline_query: InlineQuery):
+    items_per_page = 10
+    command_data = inline_query.query.split("_")  # chat_id_event_media_type
+    if not (len(command_data) == 3 and command_data[0].isdigit()):
+        return
+    chat_id = int(command_data[0])
+    event_name = command_data[1]
+    media_type = MediaTypeEnum(command_data[2])
+    result = await TriggerService.get_triggers_for_inline(
+        event_name=event_name,
+        chat_id=chat_id,
+        media_type=media_type,
+        items_per_page=items_per_page,
+        offset=inline_query.offset,
+    )
+    if isinstance(result, tuple):
+        next_offset, records_list = result
+    else:
+        records_list = []
+
+    inline_list = list()
+    if records_list:
+        if media_type == MediaTypeEnum.TEXT:
+            for record in records_list:
+                inline_list.append(
+                    InlineQueryResultArticle(
+                        id=f"trigger_{record.id}",
+                        title=record.media,
+                        description=f"#{record.id}",
+                        input_message_content=InputTextMessageContent(
+                            message_text=record.media,
+                        ),
+                        thumb_url="https://repository-images.githubusercontent.com/515040297/b1d94f1e-26ef-4b0a-8601-9b139ee5c5cc",
+                        reply_markup=get_manage_answer_keyboards(
+                            trigger_event=event_name,
+                            trigger_id=record.id,
+                        ),
+                    )
+                )
+        if media_type == MediaTypeEnum.ANIMATION:
+            for record in records_list:
+                inline_list.append(
+                    InlineQueryResultCachedGif(  # type: ignore
+                        id=f"rect_{record.id}",
+                        gif_file_id=record.media,
+                        reply_markup=get_manage_answer_keyboards(
+                            trigger_event=event_name,
+                            trigger_id=record.id,
+                        ),
+                    )
+                )
+        if media_type == MediaTypeEnum.STICKER:
+            for record in records_list:
+                inline_list.append(
+                    InlineQueryResultCachedSticker(  # type: ignore
+                        id=f"rect_{record.id}",
+                        title=record.media,
+                        sticker_file_id=record.media,
+                        reply_markup=get_manage_answer_keyboards(
+                            trigger_event=event_name,
+                            trigger_id=record.id,
+                        ),
+                    )
+                )
+    if inline_list:
+        await inline_query.answer(
+            results=inline_list, cache_time=5, next_offset=next_offset  # type: ignore #TODO
+        )
 
 
 @triggers_router.message(F.text, StateFilter(default_state), IsTrigger())
@@ -132,6 +220,15 @@ async def process_trigger(message: Message):
             await message.reply_sticker(sticker=result.media)
     else:
         await message.answer(text=result)
+
+
+@triggers_router.callback_query(DeleteTriggerCallback.filter())
+async def process_delete_trigger(
+    callback_query: CallbackQuery,
+    callback_data: DeleteTriggerCallback,
+):
+    result = await TriggerService.delete_trigger(callback_data.trigger_id)
+    await callback_query.answer(text=result)
 
 
 @triggers_router.callback_query(CancelStateCallback.filter(F.msg_id_which_run_state))

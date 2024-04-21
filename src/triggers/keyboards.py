@@ -22,18 +22,19 @@ def get_cancel_state_keyboards(
 
 def get_trigger_keyboards(
     trigger_name: str,
+    chat_id: int,
 ) -> InlineKeyboardMarkup:
     keyboard_text = InlineKeyboardButton(
         text="text",
-        switch_inline_query_current_chat=f"#{trigger_name}_text",
+        switch_inline_query_current_chat=f"{chat_id}_{trigger_name}_text",
     )
     keyboard_animation = InlineKeyboardButton(
         text="animation",
-        switch_inline_query_current_chat=f"#{trigger_name}_animation",
+        switch_inline_query_current_chat=f"{chat_id}_{trigger_name}_animation",
     )
     keyboard_sticker = InlineKeyboardButton(
         text="sticker",
-        switch_inline_query_current_chat=f"#{trigger_name}_sticker",
+        switch_inline_query_current_chat=f"{chat_id}_{trigger_name}_sticker",
     )
     keyboards = InlineKeyboardMarkup(
         inline_keyboard=[
@@ -51,7 +52,7 @@ def get_manage_answer_keyboards(
 ) -> InlineKeyboardMarkup:
     delete_button = InlineKeyboardButton(
         text=f"❌delete_trigger_{trigger_event}_{trigger_id}",
-        callback_data=DeleteTriggerCallback(rect_id=trigger_id).pack(),
+        callback_data=DeleteTriggerCallback(trigger_id=trigger_id).pack(),
     )
     list_of_button = [delete_button]
     keyboards = InlineKeyboardMarkup(inline_keyboard=[list_of_button])
