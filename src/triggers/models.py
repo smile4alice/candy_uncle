@@ -1,6 +1,6 @@
 from typing import List
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import BIGINT, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database import Base
@@ -15,7 +15,7 @@ class TriggerEvent(Base):
     match_mode: Mapped[MatchModeEnum] = mapped_column(default=MatchModeEnum.text)
     name: Mapped[str] = mapped_column(String(length=100))
     event: Mapped[str] = mapped_column(String(length=4096))
-    chat_id: Mapped[int]
+    chat_id: Mapped[int] = mapped_column(BIGINT)
 
     triggers: Mapped[List["Trigger"]] = relationship(
         back_populates="trigger_event", passive_deletes=True
