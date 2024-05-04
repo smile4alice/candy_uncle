@@ -25,7 +25,6 @@ async def process_instagram_download(message: Message):
             )
             await message.reply_photo(photo=serv_output.media)  # type: ignore
         elif serv_output.is_sidecar:
-            # await bot.send_media_group(chat_id=message.chat.id, media=serv_output.media, )
             await message.reply_media_group(media=serv_output.media)  # type: ignore
         elif serv_output.is_text:
             await message.bot.send_chat_action(chat_id=message.chat.id, action="typing")

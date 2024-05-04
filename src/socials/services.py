@@ -59,14 +59,10 @@ class InstagramService:
             for item in post["edge_sidecar_to_children"]["edges"]:
                 if item["node"]["is_video"]:
                     video_url = item["node"]["video_url"]
-                    if 20 <= self._get_size(video_url) <= 50:
+                    if self._get_size(video_url) <= 50:
                         media = InputMediaVideo(
                             media=self._get_media2buffer_from_url(video_url),
                             supports_streaming=True,
-                        )
-                    elif self._get_size(video_url) <= 20:
-                        media = InputMediaVideo(
-                            media=video_url, supports_streaming=True
                         )
                     else:
                         oversize.append(item["node"]["video_url"])
