@@ -1,3 +1,7 @@
+# Development
+docker-compose.debug.yml
+.cursorignore
+
 # Secrets
 env.base64
 certificates/
