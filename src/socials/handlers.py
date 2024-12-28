@@ -4,7 +4,7 @@ from aiogram.types import Message
 from src.lib import SERVER_ERROR
 from src.logging import LOGGER
 from src.socials.filters import IsInstagram
-from src.socials.services import InstagramService
+from src.socials.services import InstagramServiceV2
 
 
 socials_router: Router = Router()
@@ -14,7 +14,7 @@ socials_router: Router = Router()
 @socials_router.message(F.text, IsInstagram())
 async def process_instagram_download(message: Message):
     await message.bot.send_chat_action(chat_id=message.chat.id, action="upload_video")
-    serv = InstagramService()
+    serv = InstagramServiceV2()
     try:
         serv_output = await serv.get_post_media(message)
         if serv_output.is_video:

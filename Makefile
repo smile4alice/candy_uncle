@@ -1,4 +1,4 @@
-.PHONY: init down dev pre_commit export_secret tests drop_db
+.PHONY: init down debug pre_commit export_secret tests drop_db
 
 START_COMMAND := python main.py
 DB_CONTAINER := postgres_uncle
@@ -30,13 +30,6 @@ down:
 build:
 	docker compose up -d --build --scale postgres_tests=0
 
-dev: down
-	docker compose up postgres redis -d
-	$(call docker_start_lock,$(DB_CONTAINER))
-	$(call docker_start_lock,$(REDIS_CONTAINER))
-	alembic upgrade head
-	$(START_COMMAND)
-
 pre_commit:
 	pre-commit install
 	sh scripts/pre_commit.sh
@@ -60,3 +53,7 @@ drop_db: down
 		docker volume rm $(REDIS_VOLUME); \
 		echo "successfully drop ${REDIS_VOLUME}";\
 	fi
+
+debug: down
+	docker compose -f docker-compose.debug.yml down
+	docker compose -f docker-compose.debug.yml up -d --build
