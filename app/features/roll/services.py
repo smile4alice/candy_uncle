@@ -9,7 +9,7 @@ from app.features.roll.schemas import RollResult
 
 class RollService:
     """Service class for handling dice digit rolls."""
-    
+
     def __init__(self, message: Message):
         self.message = message
         self.text = message.text or ""
@@ -33,7 +33,9 @@ class RollService:
             extract_digit = findall(
                 r"(^\/[rр][оo][lл]{1,})\s*(\d*[.,]*\d*)(.*)",
                 self.text.lower(),
-            )[0][1]
+            )[
+                0
+            ][1]
             min_digit = 1
             if not extract_digit or extract_digit == "0":
                 max_digit = 100

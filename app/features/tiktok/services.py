@@ -20,9 +20,9 @@ class TikTokService:
     async def process_tiktok_content(self) -> None:
         """Main method to process TikTok content."""
         await self.message.bot.send_chat_action(chat_id=self.chat_id, action="upload_video")
-        
+
         serv_output = await self._get_media_from_video_id()
-        
+
         if serv_output.is_video:
             await self.message.reply_video(video=serv_output.media, supports_streaming=True)
         elif serv_output.is_text:
@@ -32,7 +32,7 @@ class TikTokService:
     def _get_video_id(self, text: str) -> str | None:
         """
         Extract TikTok video ID from URL.
-        
+
         :param text: Text containing TikTok URL
         :return: TikTok video ID or None if not found
         """
@@ -45,26 +45,31 @@ class TikTokService:
 
     async def _get_media_from_video_id(self):
         video_data = await self.get_tiktok_data(self.video_id)
-        
+
         output_data = TikTokServiceDTO()
         if video_data and "video_url" in video_data:
-            output_data.media = video_data["video_url"]
-            if await self._get_size(output_data.media) <= 50:
+            video_url = video_data["video_url"]
+            video_size = await self._get_size(video_url)
+
+            if video_size and video_size <= 50:
                 output_data.is_video = True
-                output_data.media = await self._get_media2buffer_from_url(output_data.media)
+                output_data.media = await self._get_media2buffer_from_url(video_url)
             else:
                 output_data.is_text = True
-                output_data.media = f"Video too large. Direct link: {video_data['video_url']}"
+                if video_size:
+                    output_data.media = f"Video too large ({video_size:.1f}MB). Direct link: {video_url}"
+                else:
+                    output_data.media = f"Could not determine video size. Direct link: {video_url}"
         else:
             output_data.is_text = True
             output_data.media = "Could not download TikTok video"
-        
+
         return output_data
 
     async def get_tiktok_data(self, video_id: str) -> dict | None:
         """
         Fetch TikTok video data from API.
-        
+
         :param video_id: TikTok video ID
         :return: TikTok video data dictionary or None if failed
         :raises TikTokAPIError: When API request fails
@@ -74,9 +79,9 @@ class TikTokService:
         params = {"url": f"https://www.tiktok.com/@user/video/{video_id}"}
         headers = {
             "X-RapidAPI-Key": settings.RAPIDAPI_KEY,
-            "X-RapidAPI-Host": "tiktok-video-no-watermark2.p.rapidapi.com"
+            "X-RapidAPI-Host": "tiktok-video-no-watermark2.p.rapidapi.com",
         }
-        
+
         try:
             async with httpx.AsyncClient(timeout=30) as client:
                 response = await client.get(url, headers=headers, params=params)
@@ -86,18 +91,18 @@ class TikTokService:
                     return {
                         "video_url": data.get("data", {}).get("play"),
                         "title": data.get("data", {}).get("title", ""),
-                        "author": data.get("data", {}).get("author", {})
+                        "author": data.get("data", {}).get("author", {}),
                     }
         except httpx.RequestError as e:
             raise TikTokAPIError(f"TikTok API request failed: {e}")
-        
+
         return None
 
     @staticmethod
     async def _get_size(url: str) -> float | None:
         """
         Get file size from URL in MB.
-        
+
         :param url: File URL
         :return: File size in MB or None if failed
         """
@@ -110,7 +115,7 @@ class TikTokService:
                     size_in_mb = size_in_bytes / (1024 * 1024)
                     return size_in_mb
         except Exception:
-            print("Не вдалося отримати розмір відео.")
+            pass  # Size check failed, will handle in calling code
         return None
 
     @staticmethod

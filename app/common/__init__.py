@@ -15,7 +15,7 @@ __all__ = [
     "error_handler",
     "BaseAppException",
     "ExternalServiceError",
-    "InstagramAPIError", 
+    "InstagramAPIError",
     "TikTokAPIError",
     "InternalAppError",
     "RollProcessingError",

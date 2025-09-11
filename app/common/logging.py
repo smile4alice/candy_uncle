@@ -99,9 +99,7 @@ def init_logger() -> logging.Logger:
     """This function creates and configures an instance of the logging.Logger class,
     setting it up with handlers that send log records.
     """
-    logs_format = (
-        "%(levelname)-8s | %(asctime)-20s| %(filename)s:%(lineno)s | %(message)s"
-    )
+    logs_format = "%(levelname)-8s | %(asctime)-20s| %(filename)s:%(lineno)s | %(message)s"
     logs_date_format = " %Y-%m-%d %H:%M:%S"
     formatter = logging.Formatter(logs_format, logs_date_format)
 

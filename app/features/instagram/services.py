@@ -5,7 +5,6 @@ import re
 import httpx
 from aiogram.types import (
     BufferedInputFile,
-    InputMedia,
     InputMediaPhoto,
     InputMediaVideo,
     Message,
@@ -20,7 +19,7 @@ class InstagramService:
     def __init__(self, message: Message) -> None:
         """
         Initialize Instagram service with message data.
-        
+
         :param message: Telegram message object containing Instagram URL
         """
         self.message = message
@@ -31,9 +30,9 @@ class InstagramService:
     async def process_instagram_content(self) -> None:
         """Main method to process Instagram content."""
         await self.message.bot.send_chat_action(chat_id=self.chat_id, action="upload_video")
-        
+
         serv_output = await self._get_media_from_shortcode()
-        
+
         if serv_output.is_video:
             await self.message.reply_video(video=serv_output.media, supports_streaming=True)
         elif serv_output.is_photo:
@@ -48,7 +47,7 @@ class InstagramService:
     def _get_shortcode(self, text: str) -> str | None:
         """
         Extract Instagram shortcode from URL.
-        
+
         :param text: Text containing Instagram URL
         :return: Instagram shortcode or None if not found
         """
@@ -62,14 +61,18 @@ class InstagramService:
 
         output_data = InstagramServiceDTO()
         if post["__typename"] == "GraphVideo":
-            output_data.media = post["video_url"]
-            if 20 <= await self._get_size(output_data.media) <= 50:
+            video_url = post["video_url"]
+            video_size = await self._get_size(video_url)
+
+            if video_size and video_size <= 50:
                 output_data.is_video = True
-                output_data.media = await self._get_media2buffer_from_url(output_data.media)
-            elif await self._get_size(output_data.media) <= 20:
-                output_data.is_video = True
+                output_data.media = await self._get_media2buffer_from_url(video_url)
             else:
                 output_data.is_text = True
+                if video_size:
+                    output_data.media = f"Video too large ({video_size:.1f}MB). Direct link: {video_url}"
+                else:
+                    output_data.media = f"Could not determine video size. Direct link: {video_url}"
         elif post["__typename"] == "GraphImage":
             output_data.media = post["display_url"]
             output_data.is_photo = True
@@ -83,30 +86,33 @@ class InstagramService:
             for item in post["edge_sidecar_to_children"]["edges"]:
                 if item["node"]["is_video"]:
                     video_url = item["node"]["video_url"]
-                    if await self._get_size(video_url) <= 50:
+                    video_size = await self._get_size(video_url)
+
+                    if video_size and video_size <= 50:
                         media = InputMediaVideo(
                             media=await self._get_media2buffer_from_url(video_url),
                             supports_streaming=True,
                         )
+                        output_data.media.append(media)
                     else:
-                        oversize.append(item["node"]["video_url"])
+                        if video_size:
+                            oversize.append(f"{video_url} ({video_size:.1f}MB)")
+                        else:
+                            oversize.append(f"{video_url} (size unknown)")
                         continue
                 else:
                     media = InputMediaPhoto(media=item["node"]["display_url"])
-
-                output_data.media.append(media)
+                    output_data.media.append(media)
 
             if oversize:
-                await self.message.bot.send_message(
-                    chat_id=self.chat_id, text="\n".join(oversize)
-                )
+                await self.message.bot.send_message(chat_id=self.chat_id, text="\n".join(oversize))
 
         return output_data
 
     async def get_rapid_data(self, shortcode: str) -> dict:
         """
         Fetch Instagram post data from RapidAPI.
-        
+
         :param shortcode: Instagram post shortcode
         :return: Instagram post data dictionary
         :raises InstagramAPIError: When API request fails
@@ -131,7 +137,7 @@ class InstagramService:
     async def _get_size(url: str) -> float | None:
         """
         Get file size from URL in MB.
-        
+
         :param url: File URL
         :return: File size in MB or None if failed
         """
@@ -144,7 +150,7 @@ class InstagramService:
                     size_in_mb = size_in_bytes / (1024 * 1024)
                     return size_in_mb
         except Exception:
-            print("Не вдалося отримати розмір відео.")
+            pass  # Size check failed, will handle in calling code
         return None
 
     @staticmethod
