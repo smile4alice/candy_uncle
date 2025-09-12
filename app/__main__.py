@@ -13,7 +13,7 @@ from aiohttp import web
 from app import ROUTERS
 from app.config import settings
 from app.common.enums import Environment
-from app.common.logging import LOGGER
+from app.common.logging import logger
 from app.common.storage import STORAGE
 
 
@@ -59,7 +59,7 @@ def start_web_app(
 
 
 async def main():
-    LOGGER.info("Bot is started")
+    logger.info("Bot is started")
 
     bot = Bot(
         token=settings.BOT_TOKEN,

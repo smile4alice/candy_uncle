@@ -7,7 +7,7 @@ from typing import Callable, Any
 from aiogram.types import Message
 
 from app.config import settings
-from app.common.logging import LOGGER
+from app.common.logging import logger
 from app.common.exceptions import BaseAppException
 
 
@@ -36,7 +36,7 @@ async def _handle_app_error(message: Message, error: BaseAppException) -> None:
         await _send_error_to_superuser(message, error)
 
     except Exception as e:
-        LOGGER.exception(f"Failed to handle app error: {e}")
+        logger.exception(f"Failed to handle app error: {e}")
 
 
 async def _handle_generic_error(message: Message, error: Exception) -> None:
@@ -52,7 +52,7 @@ async def _handle_generic_error(message: Message, error: Exception) -> None:
         await _send_error_to_superuser(message, error)
 
     except Exception as e:
-        LOGGER.exception(f"Failed to handle generic error: {e}")
+        logger.exception(f"Failed to handle generic error: {e}")
 
 
 async def _send_error_to_superuser(message: Message, error: Exception) -> None:
@@ -63,7 +63,7 @@ async def _send_error_to_superuser(message: Message, error: Exception) -> None:
         await message.bot.send_message(chat_id=settings.SUPERUSER_ID, text=error_details, parse_mode="HTML")
 
     except Exception as e:
-        LOGGER.exception(f"Failed to send error to superuser: {e}")
+        logger.exception(f"Failed to send error to superuser: {e}")
 
 
 def _format_error_details(message: Message, error: Exception) -> str:

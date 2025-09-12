@@ -123,5 +123,5 @@ def init_logger() -> logging.Logger:
     return logger
 
 
-LOGGER = init_logger()
+logger = init_logger()
 """Singleton instance of logging"""
