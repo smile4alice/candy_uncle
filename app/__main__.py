@@ -58,24 +58,29 @@ def start_web_app(
     )
 
 
-def main(loop: asyncio.AbstractEventLoop):
+async def main():
     LOGGER.info("Bot is started")
 
     bot = Bot(
         token=settings.BOT_TOKEN,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
+        session_timeout=60,  # Increase session timeout
     )
     dp = Dispatcher(storage=STORAGE)
 
     dp.include_routers(*ROUTERS)
 
     if settings.ENVIRONMENT == Environment.PRODUCTION:
+        # For production, we need to handle webhook setup differently
+        await bot.delete_webhook(drop_pending_updates=True)
+
+        # create event loop and start web app
+        loop = asyncio.get_event_loop()
         start_web_app(dp, bot, loop)
     else:
-        loop.run_until_complete(bot.delete_webhook(drop_pending_updates=True))
-        loop.run_until_complete(dp.start_polling(bot))
+        await bot.delete_webhook(drop_pending_updates=True)
+        await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    main(loop)
+    asyncio.run(main())
