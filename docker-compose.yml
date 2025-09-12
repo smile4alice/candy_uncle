@@ -3,10 +3,8 @@ services:
   redis:
     image: redis:7.2.4
     container_name: redis_uncle
-    ports:
-      - $REDIS_PORT:$REDIS_PORT
     command: [--requirepass $REDIS_PASSWORD]
-    restart: always
+    restart: unless-stopped
     volumes:
       - redis_data:/data
     networks:
@@ -28,7 +26,7 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-    restart: always
+    restart: unless-stopped
     volumes:
       - backend_data:/backend_app/media
     networks:
