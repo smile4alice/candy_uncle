@@ -14,7 +14,7 @@ from app import ROUTERS
 from app.config import settings
 from app.common.enums import Environment
 from app.common.logging import logger
-from app.common.storage import STORAGE
+from app.common.storage import redis_storage
 
 
 async def on_startup(bot: Bot) -> None:
@@ -66,7 +66,7 @@ async def main():
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
         session_timeout=60,  # Increase session timeout
     )
-    dp = Dispatcher(storage=STORAGE)
+    dp = Dispatcher(storage=redis_storage)
 
     dp.include_routers(*ROUTERS)
 

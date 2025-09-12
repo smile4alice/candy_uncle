@@ -9,4 +9,4 @@ redis_engine = Redis(
     port=settings.REDIS_PORT,
 )
 
-STORAGE = RedisStorage(redis=redis_engine)
+redis_storage = RedisStorage(redis=redis_engine)
