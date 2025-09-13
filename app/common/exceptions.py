@@ -46,6 +46,16 @@ class TikTokAPIError(ExternalServiceError):
         )
 
 
+class YouTubeAPIError(ExternalServiceError):
+    """Exception raised when YouTube API calls fail."""
+
+    def __init__(self, message: str = "YouTube API error"):
+        super().__init__(
+            message=message,
+            user_message="Failed to download content from YouTube. Please try again later.",
+        )
+
+
 # Internal application errors (business logic, validation)
 class InternalAppError(BaseAppException):
     """Exception raised when internal application logic fails."""

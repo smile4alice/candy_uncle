@@ -29,8 +29,8 @@ def error_handler(func: Callable) -> Callable:
 async def _handle_app_error(message: Message, error: BaseAppException) -> None:
     """Handle application-specific errors."""
     try:
-        # Send user-friendly message
-        await message.bot.send_message(chat_id=message.chat.id, text=error.user_message)
+        # Log error
+        logger.error(f"App error: {error.message}")
 
         # Send detailed error to superuser
         await _send_error_to_superuser(message, error)
@@ -42,11 +42,8 @@ async def _handle_app_error(message: Message, error: BaseAppException) -> None:
 async def _handle_generic_error(message: Message, error: Exception) -> None:
     """Handle generic errors."""
     try:
-        # Send generic user message
-        await message.bot.send_message(
-            chat_id=message.chat.id,
-            text="Something went wrong. Please try again later.",
-        )
+        # Log error
+        logger.exception(f"Generic error occurred: {error}")
 
         # Send detailed error to superuser
         await _send_error_to_superuser(message, error)
