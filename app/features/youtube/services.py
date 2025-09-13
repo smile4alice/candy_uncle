@@ -70,11 +70,12 @@ class YouTubeService:
             return
 
         if service_output.media_type == MediaType.VIDEO:
-            # Send as document for maximum quality (no compression)
-            await self.message.reply_document(
-                document=service_output.media,
+            # Send as video with preview for better UX
+            await self.message.reply_video(
+                video=service_output.media,
                 caption=self._format_video_caption(service_output),
                 parse_mode="HTML",
+                supports_streaming=True,
             )
         elif service_output.media_type == MediaType.AUDIO:
             await self.message.reply_audio(
@@ -174,25 +175,8 @@ class YouTubeService:
         :param info: Video info dictionary
         :return: YouTubeServiceDTO if successful, None otherwise
         """
-        # Quality levels to try (from highest to lowest, optimized for 50MB limit)
+        # Any format under 50MB
         quality_levels = [
-            # Try 1080p first, but with size limit
-            {
-                "format": "best[height<=1080][filesize<50M][ext=mp4]/best[height<=1080][filesize<50M]/best[height<=1080][ext=mp4]/best[height<=1080]"
-            },
-            # Fallback to 720p with size limit
-            {
-                "format": "best[height<=720][filesize<50M][ext=mp4]/best[height<=720][filesize<50M]/best[height<=720][ext=mp4]/best[height<=720]"
-            },
-            # Fallback to 480p with size limit
-            {
-                "format": "best[height<=480][filesize<50M][ext=mp4]/best[height<=480][filesize<50M]/best[height<=480][ext=mp4]/best[height<=480]"
-            },
-            # Fallback to 360p with size limit
-            {
-                "format": "best[height<=360][filesize<50M][ext=mp4]/best[height<=360][filesize<50M]/best[height<=360][ext=mp4]/best[height<=360]"
-            },
-            # Last resort - any format under 50MB
             {"format": "best[filesize<50M][ext=mp4]/best[filesize<50M]/best[ext=mp4]/best"},
         ]
 
