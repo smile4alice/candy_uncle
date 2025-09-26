@@ -1,6 +1,8 @@
 # Secrets
 env.base64
 certificates/
+.specstory/
+.cursor*
 
 # VS code config
 .vscode*

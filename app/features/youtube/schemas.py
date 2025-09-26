@@ -10,7 +10,6 @@ class MediaType(str, Enum):
     """Media type enumeration."""
 
     VIDEO = "video"
-    AUDIO = "audio"
     SHORTS = "shorts"
 
 

@@ -11,10 +11,10 @@ from app.features.youtube.services import YouTubeService
 router = Router()
 
 
-# YOUTUBE DOWNLOAD VIDEO/AUDIO/SHORTS
+# YOUTUBE DOWNLOAD VIDEO/SHORTS
 @router.message(F.text, IsYouTube())
 @error_handler
 async def process_youtube_download(message: Message):
-    """Process YouTube video/audio/shorts download."""
+    """Process YouTube video/shorts download."""
     service = YouTubeService(message)
     await service.process_youtube_content()

@@ -69,11 +69,15 @@ def _format_error_details(message: Message, error: Exception) -> str:
     user_message = message.text or "No text"
     user_id = message.from_user.id if message.from_user else None
 
+    # Truncate long messages to avoid Telegram limits
+    error_msg = str(error)[:500] if len(str(error)) > 500 else str(error)
+    traceback_msg = error_traceback[-1000:] if len(error_traceback) > 1000 else error_traceback
+
     return (
         f"🚨 <b>Error occurred</b>\n\n"
         f"<b>Chat ID:</b> {message.chat.id}\n"
         f"<b>User ID:</b> {user_id}\n"
-        f"<b>User message:</b> <code>{user_message}</code>\n"
-        f"<b>Error:</b> {type(error).__name__}: {str(error)}\n\n"
-        f"<b>Traceback:</b>\n<code>{error_traceback}</code>"
+        f"<b>User message:</b> <code>{user_message[:100]}</code>\n"
+        f"<b>Error:</b> {type(error).__name__}: {error_msg}\n\n"
+        f"<b>Traceback:</b>\n<code>{traceback_msg}</code>"
     )

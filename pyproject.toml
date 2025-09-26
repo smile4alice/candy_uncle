@@ -10,7 +10,7 @@ dependencies = [
     "pydantic-settings>=2.7.0",
     "redis>=5.2.1",
     "httpx[h2]>=0.27.0",
-    "yt-dlp>=2025.9.5",
+    "yt-dlp>=2025.9.23",
 ]
 
 
